@@ -9,16 +9,40 @@ object LevelManager {
      * Generate a target color for a given level.
      * All levels require at least 2 colors mixed together.
      * Higher levels have more complex mixes.
+     * Ensures the new target is different from the previous one.
      */
-    fun generateTargetColor(level: Int): Pair<Color, Map<GameColor, Int>> {
+    fun generateTargetColor(level: Int, previousTarget: Color? = null): Pair<Color, Map<GameColor, Int>> {
         val availableColors = GameColor.getAvailableColors(level)
         
-        return when {
+        var result = when {
             level <= 3 -> generateSimpleTarget(availableColors)
             level <= 9 -> generateMediumTarget(availableColors)
             level <= 15 -> generateComplexTarget(availableColors)
             else -> generateAdvancedTarget(availableColors)
         }
+        
+        // If we have a previous target and it matches the new one, regenerate
+        var attempts = 0
+        while (previousTarget != null && colorsAreSame(result.first, previousTarget) && attempts < 10) {
+            result = when {
+                level <= 3 -> generateSimpleTarget(availableColors)
+                level <= 9 -> generateMediumTarget(availableColors)
+                level <= 15 -> generateComplexTarget(availableColors)
+                else -> generateAdvancedTarget(availableColors)
+            }
+            attempts++
+        }
+        
+        return result
+    }
+    
+    /**
+     * Check if two colors are effectively the same
+     */
+    private fun colorsAreSame(color1: Color, color2: Color): Boolean {
+        return color1.red == color2.red &&
+               color1.green == color2.green &&
+               color1.blue == color2.blue
     }
     
     private fun generateSimpleTarget(colors: List<GameColor>): Pair<Color, Map<GameColor, Int>> {

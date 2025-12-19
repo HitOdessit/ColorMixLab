@@ -128,6 +128,18 @@ fun LeaderboardEntryItem(
         else -> MaterialTheme.colorScheme.onSurface
     }
     
+    val difficultyEmoji = when (entry.difficulty) {
+        com.colormixlab.game.Difficulty.EASY -> "🟢"
+        com.colormixlab.game.Difficulty.MEDIUM -> "🟡"
+        com.colormixlab.game.Difficulty.HARD -> "🔴"
+    }
+    
+    val difficultyName = when (entry.difficulty) {
+        com.colormixlab.game.Difficulty.EASY -> "Easy"
+        com.colormixlab.game.Difficulty.MEDIUM -> "Medium"
+        com.colormixlab.game.Difficulty.HARD -> "Hard"
+    }
+    
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -151,32 +163,46 @@ fun LeaderboardEntryItem(
                 modifier = Modifier.width(50.dp)
             )
             
-            // Nickname
-            Text(
-                text = entry.nickname,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.weight(1f),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            
-            // Score
+            // Nickname and details
             Column(
-                horizontalAlignment = Alignment.End
+                modifier = Modifier.weight(1f)
             ) {
                 Text(
-                    text = "${entry.score} pts",
+                    text = entry.nickname,
                     fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
-                Text(
-                    text = "Level ${entry.level}",
-                    fontSize = 13.sp,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "$difficultyEmoji $difficultyName",
+                        fontSize = 13.sp,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    )
+                    Text(
+                        text = "•",
+                        fontSize = 13.sp,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                    )
+                    Text(
+                        text = "Lvl ${entry.level}",
+                        fontSize = 13.sp,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    )
+                }
             }
+            
+            // Score
+            Text(
+                text = "${entry.score} pts",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
         }
     }
 }

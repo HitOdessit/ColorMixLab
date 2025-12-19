@@ -1,9 +1,12 @@
 package com.colormixlab.model
 
+import com.colormixlab.game.Difficulty
+
 data class LeaderboardEntry(
     val nickname: String,
     val score: Int,
     val level: Int,
+    val difficulty: Difficulty = Difficulty.MEDIUM,
     val timestamp: Long = System.currentTimeMillis()
 ) : Comparable<LeaderboardEntry> {
     override fun compareTo(other: LeaderboardEntry): Int {

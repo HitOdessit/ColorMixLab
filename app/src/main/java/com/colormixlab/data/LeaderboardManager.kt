@@ -2,6 +2,7 @@ package com.colormixlab.data
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.colormixlab.game.Difficulty
 import com.colormixlab.model.LeaderboardEntry
 import org.json.JSONArray
 import org.json.JSONObject
@@ -34,10 +35,18 @@ class LeaderboardManager(context: Context) {
             val jsonArray = JSONArray(jsonString)
             (0 until jsonArray.length()).map { i ->
                 val jsonObject = jsonArray.getJSONObject(i)
+                val difficultyString = jsonObject.optString("difficulty", "MEDIUM")
+                val difficulty = try {
+                    Difficulty.valueOf(difficultyString)
+                } catch (e: Exception) {
+                    Difficulty.MEDIUM
+                }
+                
                 LeaderboardEntry(
                     nickname = jsonObject.getString("nickname"),
                     score = jsonObject.getInt("score"),
                     level = jsonObject.getInt("level"),
+                    difficulty = difficulty,
                     timestamp = jsonObject.getLong("timestamp")
                 )
             }
@@ -57,6 +66,7 @@ class LeaderboardManager(context: Context) {
                 put("nickname", entry.nickname)
                 put("score", entry.score)
                 put("level", entry.level)
+                put("difficulty", entry.difficulty.name)
                 put("timestamp", entry.timestamp)
             }
             jsonArray.put(jsonObject)

@@ -2,6 +2,7 @@ package com.colormixlab.ui
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -20,6 +21,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -29,6 +31,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.colormixlab.data.LeaderboardManager
+import com.colormixlab.game.Difficulty
 import com.colormixlab.game.GameViewModel
 import com.colormixlab.model.LeaderboardEntry
 import com.colormixlab.ui.components.ColorButton
@@ -43,7 +46,8 @@ import com.colormixlab.utils.HapticManager
 
 @Composable
 fun GameScreen(
-    viewModel: GameViewModel = viewModel()
+    viewModel: GameViewModel = viewModel(),
+    onNavigateToIntro: () -> Unit = {}
 ) {
     val state = viewModel.gameState.value
     val context = LocalContext.current
@@ -51,6 +55,15 @@ fun GameScreen(
     val leaderboardManager = remember { LeaderboardManager(context) }
     var showMenu by remember { mutableStateOf(false) }
     var showNicknameDialog by remember { mutableStateOf(false) }
+    
+    // Pause timer when dialogs are open
+    LaunchedEffect(state.showSuccessDialog, showMenu) {
+        if (state.showSuccessDialog || showMenu) {
+            viewModel.pauseTimer()
+        } else {
+            viewModel.resumeTimer()
+        }
+    }
     
     // Check if game is completed
     LaunchedEffect(state.isGameCompleted) {
@@ -116,6 +129,12 @@ fun GameScreen(
                 }
                 TargetColor(targetColor = state.targetColor)
             }
+            
+            // Timer Display (center top)
+            TimerDisplay(
+                timeRemaining = state.timeRemainingSeconds,
+                difficulty = state.difficulty
+            )
             
             Spacer(modifier = Modifier.height(8.dp))
             
@@ -214,8 +233,8 @@ fun GameScreen(
         MenuDialog(
             onDismiss = { showMenu = false },
             onRestartGame = {
-                viewModel.resetGame()
                 showMenu = false
+                onNavigateToIntro()
             },
             onShowLeaderboard = {
                 showMenu = false
@@ -238,12 +257,13 @@ fun GameScreen(
                     LeaderboardEntry(
                         nickname = nickname,
                         score = state.currentScore,
-                        level = state.currentLevel
+                        level = state.currentLevel,
+                        difficulty = state.difficulty
                     )
                 )
                 showNicknameDialog = false
                 viewModel.completeGame()
-                viewModel.resetGame()
+                onNavigateToIntro()
             }
         )
     }
@@ -838,3 +858,76 @@ fun NicknameDialog(
     }
 }
 
+@Composable
+fun TimerDisplay(
+    timeRemaining: Int?,
+    difficulty: Difficulty
+) {
+    // Don't show timer for Easy mode
+    if (difficulty == Difficulty.EASY) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                text = "∞",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+            )
+        }
+        return
+    }
+    
+    val time = timeRemaining ?: 0
+    val isWarning = time <= 5 && time > 0
+    
+    // Blink animation when warning
+    val alpha by animateFloatAsState(
+        targetValue = if (isWarning) {
+            // Create a blinking effect
+            if ((time * 2) % 2 == 0) 1f else 0.3f
+        } else {
+            1f
+        },
+        animationSpec = tween(durationMillis = 300),
+        label = "timerBlink"
+    )
+    
+    val timerColor = if (isWarning) {
+        Color.Red
+    } else {
+        MaterialTheme.colorScheme.primary
+    }
+    
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+    ) {
+        Text(
+            text = "⏱",
+            fontSize = 20.sp,
+            modifier = Modifier.alpha(alpha)
+        )
+        Spacer(modifier = Modifier.width(4.dp))
+        Text(
+            text = "$time",
+            fontSize = 28.sp,
+            fontWeight = FontWeight.Bold,
+            color = timerColor,
+            modifier = Modifier.alpha(alpha)
+        )
+        Text(
+            text = "s",
+            fontSize = 16.sp,
+            color = timerColor.copy(alpha = 0.7f),
+            modifier = Modifier
+                .padding(start = 2.dp)
+                .alpha(alpha)
+        )
+    }
+}

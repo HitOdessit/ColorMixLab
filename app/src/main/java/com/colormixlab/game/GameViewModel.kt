@@ -3,14 +3,24 @@ package com.colormixlab.game
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.colormixlab.model.GameColor
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class GameViewModel : ViewModel() {
     private val _gameState = mutableStateOf(GameState())
     val gameState: State<GameState> = _gameState
     
+    private var timerJob: Job? = null
+    
     init {
         startNewLevel()
+    }
+    
+    fun setDifficulty(difficulty: Difficulty) {
+        _gameState.value = _gameState.value.copy(difficulty = difficulty)
     }
     
     fun addColorDrop(color: GameColor) {
@@ -56,7 +66,7 @@ class GameViewModel : ViewModel() {
     }
     
     fun calculatePoints(similarity: Float): Int {
-        return when {
+        val basePoints = when {
             similarity >= 1.0f -> 150  // 100 + 50 bonus - Perfect match
             similarity >= 0.95f -> 100  // Excellent
             similarity >= 0.90f -> 80   // Great
@@ -70,6 +80,14 @@ class GameViewModel : ViewModel() {
             similarity >= 0.50f -> -35  // Way off
             else -> -50  // Very far from target
         }
+        
+        val multiplier = when (_gameState.value.difficulty) {
+            Difficulty.EASY -> 0.5f
+            Difficulty.MEDIUM -> 1.0f
+            Difficulty.HARD -> 1.5f
+        }
+        
+        return (basePoints * multiplier).toInt()
     }
     
     fun getResultMessage(similarity: Float): String {
@@ -109,6 +127,7 @@ class GameViewModel : ViewModel() {
         
         // Check if game is completed
         if (currentLevel >= GameState.MAX_LEVEL) {
+            cancelTimer()
             _gameState.value = _gameState.value.copy(
                 showSuccessDialog = false,
                 isGameCompleted = true
@@ -117,7 +136,10 @@ class GameViewModel : ViewModel() {
         }
         
         val newLevel = currentLevel + 1
-        val (targetColor, recipe) = LevelManager.generateTargetColor(newLevel)
+        val previousTarget = _gameState.value.targetColor
+        val (targetColor, recipe) = LevelManager.generateTargetColor(newLevel, previousTarget)
+        
+        cancelTimer()
         
         _gameState.value = _gameState.value.copy(
             currentLevel = newLevel,
@@ -131,10 +153,15 @@ class GameViewModel : ViewModel() {
             hasCheckedThisRound = false,
             similarity = 0f
         )
+        
+        startTimer()
     }
     
     fun retryLevel() {
-        val (targetColor, recipe) = LevelManager.generateTargetColor(_gameState.value.currentLevel)
+        val previousTarget = _gameState.value.targetColor
+        val (targetColor, recipe) = LevelManager.generateTargetColor(_gameState.value.currentLevel, previousTarget)
+        
+        cancelTimer()
         
         _gameState.value = _gameState.value.copy(
             targetColor = targetColor,
@@ -145,6 +172,8 @@ class GameViewModel : ViewModel() {
             hasCheckedThisRound = false,
             similarity = 0f
         )
+        
+        startTimer()
     }
     
     fun dismissSuccessDialog() {
@@ -152,7 +181,8 @@ class GameViewModel : ViewModel() {
     }
     
     private fun startNewLevel() {
-        val (targetColor, recipe) = LevelManager.generateTargetColor(_gameState.value.currentLevel)
+        val previousTarget = if (_gameState.value.currentLevel > 1) _gameState.value.targetColor else null
+        val (targetColor, recipe) = LevelManager.generateTargetColor(_gameState.value.currentLevel, previousTarget)
         
         _gameState.value = _gameState.value.copy(
             targetColor = targetColor,
@@ -163,10 +193,13 @@ class GameViewModel : ViewModel() {
             showSuccessDialog = false,
             similarity = 0f
         )
+        
+        startTimer()
     }
     
     fun resetGame() {
-        _gameState.value = GameState()
+        cancelTimer()
+        _gameState.value = GameState(difficulty = _gameState.value.difficulty)
         startNewLevel()
     }
     
@@ -174,6 +207,64 @@ class GameViewModel : ViewModel() {
         _gameState.value = _gameState.value.copy(
             isGameCompleted = false
         )
+    }
+    
+    // Timer functions
+    fun startTimer() {
+        val duration = GameState.getTimerDuration(_gameState.value.difficulty) ?: return
+
+        timerJob?.cancel()
+        timerJob = viewModelScope.launch {
+            _gameState.value = _gameState.value.copy(
+                timeRemainingSeconds = duration,
+                isTimerActive = true,
+                isTimerPaused = false
+            )
+
+            while (true) {
+                val currentTime = _gameState.value.timeRemainingSeconds ?: break
+                if (currentTime <= 0) break
+
+                delay(1000)
+                if (!_gameState.value.isTimerPaused) {
+                    val newTime = currentTime - 1
+                    _gameState.value = _gameState.value.copy(
+                        timeRemainingSeconds = newTime
+                    )
+
+                    if (newTime == 0) {
+                        onTimerExpired()
+                    }
+                }
+            }
+        }
+    }
+    
+    fun pauseTimer() {
+        _gameState.value = _gameState.value.copy(isTimerPaused = true)
+    }
+    
+    fun resumeTimer() {
+        _gameState.value = _gameState.value.copy(isTimerPaused = false)
+    }
+    
+    fun cancelTimer() {
+        timerJob?.cancel()
+        _gameState.value = _gameState.value.copy(
+            isTimerActive = false,
+            timeRemainingSeconds = null,
+            isTimerPaused = false
+        )
+    }
+    
+    private fun onTimerExpired() {
+        // Deduct 50 points
+        val newScore = (_gameState.value.currentScore - 50).coerceAtLeast(0)
+        _gameState.value = _gameState.value.copy(currentScore = newScore)
+        
+        // Auto-advance to next level
+        cancelTimer()
+        nextLevel()
     }
 }
 

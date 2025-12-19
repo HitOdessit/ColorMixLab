@@ -8,17 +8,16 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.colormixlab.game.Difficulty
+import com.colormixlab.game.GameViewModel
 import com.colormixlab.ui.GameScreen
-import com.colormixlab.ui.WelcomeScreen
+import com.colormixlab.ui.IntroScreen
 import com.colormixlab.ui.theme.ColorMixLabTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
-        // Check if first launch
-        val prefs = getSharedPreferences("game_prefs", MODE_PRIVATE)
-        val isFirstLaunch = prefs.getBoolean("is_first_launch", true)
         
         setContent {
             ColorMixLabTheme {
@@ -26,22 +25,27 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    var showWelcome by remember { mutableStateOf(isFirstLaunch) }
+                    var showIntro by remember { mutableStateOf(true) }
+                    val viewModel: GameViewModel = viewModel()
                     
-                    if (showWelcome) {
-                        WelcomeScreen(
-                            onStartGame = {
-                                showWelcome = false
-                                // Mark as not first launch
-                                prefs.edit().putBoolean("is_first_launch", false).apply()
+                    if (showIntro) {
+                        IntroScreen(
+                            onStartGame = { difficulty ->
+                                viewModel.setDifficulty(difficulty)
+                                viewModel.resetGame()
+                                showIntro = false
                             }
                         )
                     } else {
-                        GameScreen()
+                        GameScreen(
+                            viewModel = viewModel,
+                            onNavigateToIntro = {
+                                showIntro = true
+                            }
+                        )
                     }
                 }
             }
         }
     }
 }
-

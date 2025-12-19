@@ -232,7 +232,6 @@ class GameViewModel : ViewModel() {
     fun forceFinishGame() {
         cancelTimer()
         _gameState.value = _gameState.value.copy(
-            currentLevel = GameState.MAX_LEVEL,
             isGameCompleted = true,
             showSuccessDialog = false
         )

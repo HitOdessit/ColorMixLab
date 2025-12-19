@@ -55,6 +55,8 @@ fun GameScreen(
     val leaderboardManager = remember { LeaderboardManager(context) }
     var showMenu by remember { mutableStateOf(false) }
     var showNicknameDialog by remember { mutableStateOf(false) }
+    var showLeaderboardAfterNickname by remember { mutableStateOf(false) }
+    var showFinalLeaderboard by remember { mutableStateOf(false) }
     
     // Pause timer when dialogs are open
     LaunchedEffect(state.showSuccessDialog, showMenu) {
@@ -244,6 +246,10 @@ fun GameScreen(
             onResetLeaderboard = {
                 leaderboardManager.clearLeaderboard()
             },
+            onFinishGame = {
+                showLeaderboardAfterNickname = true
+                viewModel.forceFinishGame()
+            },
             leaderboardEntries = leaderboardManager.getEntries()
         )
     }
@@ -264,6 +270,24 @@ fun GameScreen(
                 )
                 showNicknameDialog = false
                 viewModel.completeGame()
+
+                // Check if we should show leaderboard or navigate to intro
+                if (showLeaderboardAfterNickname) {
+                    showLeaderboardAfterNickname = false
+                    showFinalLeaderboard = true
+                } else {
+                    onNavigateToIntro()
+                }
+            }
+        )
+    }
+
+    // Final Leaderboard Dialog (shown after finish game)
+    if (showFinalLeaderboard) {
+        LeaderboardDialog(
+            entries = leaderboardManager.getEntries(),
+            onDismiss = {
+                showFinalLeaderboard = false
                 onNavigateToIntro()
             }
         )
@@ -552,10 +576,12 @@ fun MenuDialog(
     onRestartGame: () -> Unit,
     onShowLeaderboard: () -> Unit,
     onResetLeaderboard: () -> Unit,
+    onFinishGame: () -> Unit,
     leaderboardEntries: List<LeaderboardEntry>
 ) {
     var showConfirmation by remember { mutableStateOf(false) }
     var showResetLeaderboardConfirmation by remember { mutableStateOf(false) }
+    var showFinishGameConfirmation by remember { mutableStateOf(false) }
     var showLeaderboard by remember { mutableStateOf(false) }
     
     Dialog(onDismissRequest = onDismiss) {
@@ -631,6 +657,25 @@ fun MenuDialog(
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "Restart Game",
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                // Finish Game Button
+                Button(
+                    onClick = { showFinishGameConfirmation = true },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF9C27B0)
+                    ),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+                ) {
+                    Text(
+                        text = "Finish Game",
                         fontSize = 17.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -741,6 +786,41 @@ fun MenuDialog(
             }
         )
     }
+
+    // Finish Game Confirmation
+    if (showFinishGameConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showFinishGameConfirmation = false },
+            title = {
+                Text(
+                    text = "Finish Game?",
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text("This will end your current game and submit your score to the leaderboard.")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showFinishGameConfirmation = false
+                        onDismiss()
+                        onFinishGame()
+                    },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = Color(0xFF9C27B0)
+                    )
+                ) {
+                    Text("Finish", fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showFinishGameConfirmation = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
     
     // Leaderboard Dialog
     if (showLeaderboard) {
@@ -758,13 +838,13 @@ fun NicknameDialog(
     onSubmit: (String) -> Unit
 ) {
     var nickname by remember { mutableStateOf("") }
-    
+
     Dialog(onDismissRequest = { /* Prevent dismissing */ }) {
         Card(
             modifier = Modifier
                 .fillMaxWidth(0.9f)
                 .padding(16.dp),
-            shape = RoundedCornerShape(28.dp),
+            shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surface
             ),
@@ -773,32 +853,32 @@ fun NicknameDialog(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(32.dp),
+                    .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(20.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 // Celebration
                 Text(
                     text = "🎉",
-                    fontSize = 80.sp,
+                    fontSize = 64.sp,
                     textAlign = TextAlign.Center
                 )
-                
+
                 Text(
                     text = "Game Complete!",
-                    fontSize = 32.sp,
+                    fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,
                     textAlign = TextAlign.Center
                 )
-                
+
                 Text(
-                    text = "You completed all $finalLevel levels!",
-                    fontSize = 20.sp,
+                    text = if (finalLevel >= 30) "You completed all $finalLevel levels!" else "You reached level $finalLevel!",
+                    fontSize = 18.sp,
                     textAlign = TextAlign.Center,
                     color = MaterialTheme.colorScheme.onSurface
                 )
-                
+
                 // Score display
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -810,51 +890,49 @@ fun NicknameDialog(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp),
+                            .padding(12.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
                             text = "Final Score",
-                            fontSize = 16.sp,
+                            fontSize = 14.sp,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                         Text(
                             text = "$finalScore",
-                            fontSize = 36.sp,
+                            fontSize = 32.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                     }
                 }
-                
-                Spacer(modifier = Modifier.height(8.dp))
-                
+
                 // Nickname input
                 Text(
                     text = "Enter your name for the leaderboard:",
-                    fontSize = 16.sp,
+                    fontSize = 14.sp,
                     textAlign = TextAlign.Center
                 )
-                
+
                 OutlinedTextField(
                     value = nickname,
-                    onValueChange = { 
-                        if (it.length <= 15) nickname = it 
+                    onValueChange = {
+                        if (it.length <= 15) nickname = it
                     },
                     label = { Text("Nickname") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp)
                 )
-                
+
                 Text(
                     text = "${nickname.length}/15 characters",
-                    fontSize = 12.sp,
+                    fontSize = 11.sp,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                 )
-                
-                Spacer(modifier = Modifier.height(8.dp))
-                
+
+                Spacer(modifier = Modifier.height(4.dp))
+
                 // Submit button
                 Button(
                     onClick = {
@@ -863,7 +941,7 @@ fun NicknameDialog(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp),
+                        .height(52.dp),
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary
@@ -872,15 +950,15 @@ fun NicknameDialog(
                 ) {
                     Text(
                         text = "Submit Score",
-                        fontSize = 20.sp,
+                        fontSize = 18.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
-                
+
                 TextButton(
                     onClick = { onSubmit("Anonymous") }
                 ) {
-                    Text("Skip (submit as Anonymous)")
+                    Text("Skip (submit as Anonymous)", fontSize = 13.sp)
                 }
             }
         }

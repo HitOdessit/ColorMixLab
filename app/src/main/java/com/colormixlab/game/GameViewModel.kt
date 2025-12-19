@@ -50,18 +50,22 @@ class GameViewModel : ViewModel() {
         if (_gameState.value.hasCheckedThisRound) {
             return
         }
-        
+
         val similarity = _gameState.value.similarity
         val points = calculatePoints(similarity)
-        val newScore = (_gameState.value.currentScore + points).coerceAtLeast(0)
-        
+        val timeBonus = calculateTimeBonus(similarity)
+        val totalPoints = points + timeBonus
+        val newScore = (_gameState.value.currentScore + totalPoints).coerceAtLeast(0)
+
         val isSuccess = similarity >= 0.80f  // Adjusted to 80%
-        
+
         _gameState.value = _gameState.value.copy(
             isMatched = isSuccess,
             showSuccessDialog = true,
             hasCheckedThisRound = true,
-            currentScore = newScore
+            currentScore = newScore,
+            lastBasePoints = points,
+            lastTimeBonus = timeBonus
         )
     }
     
@@ -80,14 +84,30 @@ class GameViewModel : ViewModel() {
             similarity >= 0.50f -> -35  // Way off
             else -> -50  // Very far from target
         }
-        
+
         val multiplier = when (_gameState.value.difficulty) {
             Difficulty.EASY -> 0.5f
             Difficulty.MEDIUM -> 1.0f
             Difficulty.HARD -> 1.5f
         }
-        
+
         return (basePoints * multiplier).toInt()
+    }
+
+    private fun calculateTimeBonus(similarity: Float): Int {
+        // Only give time bonus if answer is above threshold
+        if (similarity < 0.80f) return 0
+
+        // No timer in EASY mode
+        val timeRemaining = _gameState.value.timeRemainingSeconds ?: return 0
+        val totalDuration = GameState.getTimerDuration(_gameState.value.difficulty) ?: return 0
+
+        // Calculate percentage of time remaining (0.0 to 1.0)
+        val timePercent = timeRemaining.toFloat() / totalDuration.toFloat()
+
+        // Maximum time bonus is 50 points, scaled by time remaining
+        // This is independent of difficulty level
+        return (50 * timePercent).toInt()
     }
     
     fun getResultMessage(similarity: Float): String {
@@ -208,6 +228,15 @@ class GameViewModel : ViewModel() {
             isGameCompleted = false
         )
     }
+
+    fun forceFinishGame() {
+        cancelTimer()
+        _gameState.value = _gameState.value.copy(
+            currentLevel = GameState.MAX_LEVEL,
+            isGameCompleted = true,
+            showSuccessDialog = false
+        )
+    }
     
     // Timer functions
     fun startTimer() {
@@ -261,7 +290,9 @@ class GameViewModel : ViewModel() {
         // Submit current color mix as is and calculate points normally
         val similarity = _gameState.value.similarity
         val points = calculatePoints(similarity)
-        val newScore = (_gameState.value.currentScore + points).coerceAtLeast(0)
+        val timeBonus = calculateTimeBonus(similarity)  // Will be 0 since time ran out
+        val totalPoints = points + timeBonus
+        val newScore = (_gameState.value.currentScore + totalPoints).coerceAtLeast(0)
 
         val isSuccess = similarity >= 0.80f
 
@@ -271,7 +302,9 @@ class GameViewModel : ViewModel() {
             showSuccessDialog = true,
             hasCheckedThisRound = true,
             currentScore = newScore,
-            isTimerActive = false
+            isTimerActive = false,
+            lastBasePoints = points,
+            lastTimeBonus = timeBonus
         )
     }
 }

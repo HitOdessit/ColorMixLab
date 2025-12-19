@@ -25,7 +25,9 @@ data class GameState(
     val difficulty: Difficulty = Difficulty.MEDIUM,
     val timeRemainingSeconds: Int? = null,
     val isTimerActive: Boolean = false,
-    val isTimerPaused: Boolean = false
+    val isTimerPaused: Boolean = false,
+    val lastBasePoints: Int = 0,
+    val lastTimeBonus: Int = 0
 ) {
     fun getDropCount(color: GameColor): Int = drops[color] ?: 0
     

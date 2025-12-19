@@ -220,7 +220,8 @@ fun GameScreen(
             similarity = state.similarity,
             isSuccess = state.isMatched,
             level = state.currentLevel,
-            pointsEarned = viewModel.calculatePoints(state.similarity),
+            basePoints = state.lastBasePoints,
+            timeBonus = state.lastTimeBonus,
             onNextLevel = { viewModel.nextLevel() },
             onRetry = { viewModel.retryLevel() },
             getMessage = { viewModel.getResultMessage(it) },
@@ -274,7 +275,8 @@ fun ResultDialog(
     similarity: Float,
     isSuccess: Boolean,
     level: Int,
-    pointsEarned: Int,
+    basePoints: Int,
+    timeBonus: Int,
     onNextLevel: () -> Unit,
     onRetry: () -> Unit,
     getMessage: (Float) -> String,
@@ -284,6 +286,7 @@ fun ResultDialog(
     val message = remember(similarity) { getMessage(similarity) }
     val emoji = remember(similarity) { getEmoji(similarity) }
     val percentage = remember(similarity) { (similarity * 100).toInt() }
+    val totalPoints = basePoints + timeBonus
     
     Dialog(onDismissRequest = { }) {
         Box(modifier = Modifier.fillMaxWidth(0.9f)) {
@@ -342,16 +345,42 @@ fun ResultDialog(
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth()
                     )
-                    
-                    // Points earned/lost
-                    Text(
-                        text = if (pointsEarned >= 0) "+$pointsEarned points" else "$pointsEarned points",
-                        fontSize = 22.sp,
-                        color = if (pointsEarned >= 0) Color(0xFF4CAF50) else Color(0xFFF44336),
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center,
+
+                    // Points breakdown
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
                         modifier = Modifier.fillMaxWidth()
-                    )
+                    ) {
+                        // Base points
+                        Text(
+                            text = if (basePoints >= 0) "+$basePoints points" else "$basePoints points",
+                            fontSize = 22.sp,
+                            color = if (basePoints >= 0) Color(0xFF4CAF50) else Color(0xFFF44336),
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
+                        )
+
+                        // Time bonus (only show if > 0)
+                        if (timeBonus > 0) {
+                            Text(
+                                text = "⚡ +$timeBonus time bonus",
+                                fontSize = 18.sp,
+                                color = Color(0xFFFF9800),
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center
+                            )
+
+                            // Total points
+                            Text(
+                                text = "Total: +$totalPoints points",
+                                fontSize = 20.sp,
+                                color = Color(0xFF4CAF50),
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
                     
                     Text(
                         text = if (isSuccess) "Level $level Complete!" else "Try Level $level Again",

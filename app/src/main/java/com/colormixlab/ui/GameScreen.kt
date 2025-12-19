@@ -314,9 +314,9 @@ fun ResultDialog(
     val emoji = remember(similarity) { getEmoji(similarity) }
     val percentage = remember(similarity) { (similarity * 100).toInt() }
     val totalPoints = basePoints + timeBonus
-    
+
     Dialog(onDismissRequest = { }) {
-        Box(modifier = Modifier.fillMaxWidth(0.9f)) {
+        Box(modifier = Modifier.fillMaxWidth(0.98f)) {
             // Show confetti for perfect match - use key to prevent re-rendering
             if (similarity >= 1.0f) {
                 androidx.compose.runtime.key("confetti-$level") {
@@ -329,11 +329,11 @@ fun ResultDialog(
                     SparkleEffect(modifier = Modifier.fillMaxSize())
                 }
             }
-            
+
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 16.dp),
+                    .padding(horizontal = 12.dp, vertical = 16.dp),
                 shape = RoundedCornerShape(28.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surface
@@ -350,10 +350,10 @@ fun ResultDialog(
                     // Emoji with scale animation
                     Text(
                         text = emoji,
-                        fontSize = 80.sp,
+                        fontSize = 60.sp,
                         textAlign = TextAlign.Center
                     )
-                    
+
                     Text(
                         text = message,
                         fontSize = 36.sp,
@@ -362,7 +362,7 @@ fun ResultDialog(
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth()
                     )
-                    
+
                     // Similarity percentage
                     Text(
                         text = "Similarity: $percentage%",
@@ -370,7 +370,8 @@ fun ResultDialog(
                         color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.Medium,
                         textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        maxLines = 1
                     )
 
                     // Points breakdown
@@ -973,6 +974,9 @@ fun TimerDisplay(
     timeRemaining: Int?,
     difficulty: Difficulty
 ) {
+    val context = LocalContext.current
+    val hapticManager = remember { HapticManager(context) }
+
     // Don't show timer for Easy mode
     if (difficulty == Difficulty.EASY) {
         Row(
@@ -989,10 +993,17 @@ fun TimerDisplay(
         }
         return
     }
-    
+
     val time = timeRemaining ?: 0
     val isWarning = time <= 5 && time > 0
-    
+
+    // Trigger haptic every second when timer is in warning state
+    LaunchedEffect(time) {
+        if (isWarning) {
+            hapticManager.performHaptic(HapticManager.HapticType.LIGHT_TAP)
+        }
+    }
+
     // Blink animation when warning
     val alpha by animateFloatAsState(
         targetValue = if (isWarning) {
@@ -1004,13 +1015,13 @@ fun TimerDisplay(
         animationSpec = tween(durationMillis = 300),
         label = "timerBlink"
     )
-    
+
     val timerColor = if (isWarning) {
         Color.Red
     } else {
         MaterialTheme.colorScheme.primary
     }
-    
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,

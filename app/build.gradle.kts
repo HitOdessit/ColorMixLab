@@ -11,12 +11,17 @@ android {
         applicationId = "com.colormixlab"
         minSdk = 24
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 5  // Auto-increment this with each commit
+        versionName = "1.${versionCode}"  // Major.Minor format
 
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        // Make version available to the app
+        buildConfigField("String", "VERSION_NAME", "\"${versionName}\"")
+        buildConfigField("int", "MAJOR_VERSION", "1")
+        buildConfigField("int", "MINOR_VERSION", "${versionCode}")
     }
 
     buildTypes {
@@ -40,6 +45,7 @@ android {
     
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     
     composeOptions {

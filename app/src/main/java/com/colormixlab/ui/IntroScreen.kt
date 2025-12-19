@@ -16,6 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.colormixlab.BuildConfig
 import com.colormixlab.data.LeaderboardManager
 import com.colormixlab.game.Difficulty
 
@@ -50,8 +51,17 @@ fun IntroScreen(
                 color = MaterialTheme.colorScheme.primary,
                 textAlign = TextAlign.Center
             )
-            
-            Spacer(modifier = Modifier.height(4.dp))
+
+            // Version
+            Text(
+                text = "v${BuildConfig.VERSION_NAME}",
+                fontSize = 11.sp,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.offset(y = (-8).dp)
+            )
+
+            Spacer(modifier = Modifier.height(0.dp))
             
             // Instructions Card
             Card(

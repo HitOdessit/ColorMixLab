@@ -258,13 +258,21 @@ class GameViewModel : ViewModel() {
     }
     
     private fun onTimerExpired() {
-        // Deduct 50 points
-        val newScore = (_gameState.value.currentScore - 50).coerceAtLeast(0)
-        _gameState.value = _gameState.value.copy(currentScore = newScore)
-        
-        // Auto-advance to next level
-        cancelTimer()
-        nextLevel()
+        // Submit current color mix as is and calculate points normally
+        val similarity = _gameState.value.similarity
+        val points = calculatePoints(similarity)
+        val newScore = (_gameState.value.currentScore + points).coerceAtLeast(0)
+
+        val isSuccess = similarity >= 0.80f
+
+        // Show the end-of-level dialog
+        _gameState.value = _gameState.value.copy(
+            isMatched = isSuccess,
+            showSuccessDialog = true,
+            hasCheckedThisRound = true,
+            currentScore = newScore,
+            isTimerActive = false
+        )
     }
 }
 

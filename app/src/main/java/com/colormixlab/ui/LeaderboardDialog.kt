@@ -31,8 +31,8 @@ fun LeaderboardDialog(
     Dialog(onDismissRequest = onDismiss) {
         Card(
             modifier = Modifier
-                .fillMaxWidth(0.95f)
-                .fillMaxHeight(0.8f)
+                .fillMaxWidth(0.98f)
+                .fillMaxHeight(0.85f)
                 .padding(8.dp),
             shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(
@@ -66,7 +66,7 @@ fun LeaderboardDialog(
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
-                    
+
                     IconButton(onClick = onDismiss) {
                         Icon(
                             imageVector = Icons.Default.Close,
@@ -75,9 +75,9 @@ fun LeaderboardDialog(
                         )
                     }
                 }
-                
+
                 Divider(modifier = Modifier.padding(vertical = 12.dp))
-                
+
                 // Entries
                 if (entries.isEmpty()) {
                     Box(
@@ -88,13 +88,13 @@ fun LeaderboardDialog(
                             text = "No scores yet!\nBe the first to complete the game!",
                             fontSize = 18.sp,
                             textAlign = TextAlign.Center,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
                         )
                     }
                 } else {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         itemsIndexed(entries) { index, entry ->
                             LeaderboardEntryItem(
@@ -115,31 +115,31 @@ fun LeaderboardEntryItem(
     entry: LeaderboardEntry
 ) {
     val backgroundColor = when (rank) {
-        1 -> Color(0xFFFFD700).copy(alpha = 0.15f) // Gold
-        2 -> Color(0xFFC0C0C0).copy(alpha = 0.15f) // Silver
-        3 -> Color(0xFFCD7F32).copy(alpha = 0.15f) // Bronze
-        else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        1 -> Color(0xFFFFD700).copy(alpha = 0.2f) // Gold
+        2 -> Color(0xFFC0C0C0).copy(alpha = 0.2f) // Silver
+        3 -> Color(0xFFCD7F32).copy(alpha = 0.2f) // Bronze
+        else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
     }
-    
+
     val rankColor = when (rank) {
-        1 -> Color(0xFFFFD700) // Gold
-        2 -> Color(0xFFC0C0C0) // Silver
-        3 -> Color(0xFFCD7F32) // Bronze
+        1 -> Color(0xFFB8860B) // Dark gold for better contrast
+        2 -> Color(0xFF808080) // Dark silver for better contrast
+        3 -> Color(0xFF8B4513) // Dark bronze for better contrast
         else -> MaterialTheme.colorScheme.onSurface
     }
-    
+
     val difficultyEmoji = when (entry.difficulty) {
         com.colormixlab.game.Difficulty.EASY -> "🟢"
         com.colormixlab.game.Difficulty.MEDIUM -> "🟡"
         com.colormixlab.game.Difficulty.HARD -> "🔴"
     }
-    
+
     val difficultyName = when (entry.difficulty) {
         com.colormixlab.game.Difficulty.EASY -> "Easy"
         com.colormixlab.game.Difficulty.MEDIUM -> "Medium"
         com.colormixlab.game.Difficulty.HARD -> "Hard"
     }
-    
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -150,9 +150,9 @@ fun LeaderboardEntryItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(horizontal = 12.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             // Rank
             Text(
@@ -160,46 +160,36 @@ fun LeaderboardEntryItem(
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 color = rankColor,
-                modifier = Modifier.width(50.dp)
+                modifier = Modifier.width(42.dp)
             )
-            
+
             // Nickname and details
             Column(
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
                 Text(
                     text = entry.nickname,
                     fontSize = 18.sp,
-                    fontWeight = FontWeight.Medium,
+                    fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "$difficultyEmoji $difficultyName",
-                        fontSize = 13.sp,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                    )
-                    Text(
-                        text = "•",
-                        fontSize = 13.sp,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                    )
-                    Text(
-                        text = "Lvl ${entry.level}",
-                        fontSize = 13.sp,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                    )
-                }
+                Text(
+                    text = "$difficultyEmoji $difficultyName • Lvl ${entry.level}",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Visible
+                )
             }
-            
+
             // Score
             Text(
-                text = "${entry.score} pts",
-                fontSize = 18.sp,
+                text = "${entry.score}",
+                fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
             )

@@ -76,8 +76,8 @@ fun IntroScreen(
                     
                     listOf(
                         "• Match the target color by mixing",
-                        "• Need 80% similarity to advance",
-                        "• Complete all 30 levels",
+                        "• Need 80+% similarity to advance",
+                        "• Complete up to 30 levels",
                         "• Higher similarity = more points",
                         "• Harder difficulty = more points"
                     ).forEach { instruction ->

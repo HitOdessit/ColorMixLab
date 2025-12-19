@@ -14,10 +14,15 @@ data class GameState(
     val showSuccessDialog: Boolean = false,
     val similarity: Float = 0f,
     val currentScore: Int = 0,
-    val hasCheckedThisRound: Boolean = false
+    val hasCheckedThisRound: Boolean = false,
+    val isGameCompleted: Boolean = false
 ) {
     fun getDropCount(color: GameColor): Int = drops[color] ?: 0
     
     fun getTotalDrops(): Int = drops.values.sum()
+    
+    companion object {
+        const val MAX_LEVEL = 30
+    }
 }
 

@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -27,7 +28,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.colormixlab.data.LeaderboardManager
 import com.colormixlab.game.GameViewModel
+import com.colormixlab.model.LeaderboardEntry
 import com.colormixlab.ui.components.ColorButton
 import com.colormixlab.ui.components.ConfettiEffect
 import com.colormixlab.ui.components.LevelDisplay
@@ -45,7 +48,16 @@ fun GameScreen(
     val state = viewModel.gameState.value
     val context = LocalContext.current
     val hapticManager = remember { HapticManager(context) }
+    val leaderboardManager = remember { LeaderboardManager(context) }
     var showMenu by remember { mutableStateOf(false) }
+    var showNicknameDialog by remember { mutableStateOf(false) }
+    
+    // Check if game is completed
+    LaunchedEffect(state.isGameCompleted) {
+        if (state.isGameCompleted) {
+            showNicknameDialog = true
+        }
+    }
     
     Box(
         modifier = Modifier
@@ -204,6 +216,34 @@ fun GameScreen(
             onRestartGame = {
                 viewModel.resetGame()
                 showMenu = false
+            },
+            onShowLeaderboard = {
+                showMenu = false
+                // Will be handled in menu
+            },
+            onResetLeaderboard = {
+                leaderboardManager.clearLeaderboard()
+            },
+            leaderboardEntries = leaderboardManager.getEntries()
+        )
+    }
+    
+    // Nickname Dialog (Game Completion)
+    if (showNicknameDialog) {
+        NicknameDialog(
+            finalScore = state.currentScore,
+            finalLevel = state.currentLevel,
+            onSubmit = { nickname ->
+                leaderboardManager.addEntry(
+                    LeaderboardEntry(
+                        nickname = nickname,
+                        score = state.currentScore,
+                        level = state.currentLevel
+                    )
+                )
+                showNicknameDialog = false
+                viewModel.completeGame()
+                viewModel.resetGame()
             }
         )
     }
@@ -460,9 +500,14 @@ fun ResultDialog(
 @Composable
 fun MenuDialog(
     onDismiss: () -> Unit,
-    onRestartGame: () -> Unit
+    onRestartGame: () -> Unit,
+    onShowLeaderboard: () -> Unit,
+    onResetLeaderboard: () -> Unit,
+    leaderboardEntries: List<LeaderboardEntry>
 ) {
     var showConfirmation by remember { mutableStateOf(false) }
+    var showResetLeaderboardConfirmation by remember { mutableStateOf(false) }
+    var showLeaderboard by remember { mutableStateOf(false) }
     
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -491,6 +536,31 @@ fun MenuDialog(
                 
                 Divider(modifier = Modifier.padding(vertical = 8.dp))
                 
+                // Leaderboard Button
+                Button(
+                    onClick = { showLeaderboard = true },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFFFD700)
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Star,
+                        contentDescription = "Leaderboard",
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Leaderboard",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
+                    )
+                }
+                
                 // Restart Game Button
                 Button(
                     onClick = { showConfirmation = true },
@@ -515,6 +585,24 @@ fun MenuDialog(
                     )
                 }
                 
+                // Reset Leaderboard Button
+                OutlinedButton(
+                    onClick = { showResetLeaderboardConfirmation = true },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = Color(0xFFF44336)
+                    )
+                ) {
+                    Text(
+                        text = "Reset Leaderboard",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+                
                 // Close Button
                 OutlinedButton(
                     onClick = onDismiss,
@@ -533,7 +621,7 @@ fun MenuDialog(
         }
     }
     
-    // Confirmation Dialog
+    // Restart Game Confirmation
     if (showConfirmation) {
         AlertDialog(
             onDismissRequest = { showConfirmation = false },
@@ -565,6 +653,184 @@ fun MenuDialog(
                 }
             }
         )
+    }
+    
+    // Reset Leaderboard Confirmation
+    if (showResetLeaderboardConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showResetLeaderboardConfirmation = false },
+            title = {
+                Text(
+                    text = "Reset Leaderboard?",
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text("This will permanently delete all leaderboard entries. This action cannot be undone!")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showResetLeaderboardConfirmation = false
+                        onResetLeaderboard()
+                    },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = Color(0xFFF44336)
+                    )
+                ) {
+                    Text("Delete All", fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showResetLeaderboardConfirmation = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+    
+    // Leaderboard Dialog
+    if (showLeaderboard) {
+        LeaderboardDialog(
+            entries = leaderboardEntries,
+            onDismiss = { showLeaderboard = false }
+        )
+    }
+}
+
+@Composable
+fun NicknameDialog(
+    finalScore: Int,
+    finalLevel: Int,
+    onSubmit: (String) -> Unit
+) {
+    var nickname by remember { mutableStateOf("") }
+    
+    Dialog(onDismissRequest = { /* Prevent dismissing */ }) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth(0.9f)
+                .padding(16.dp),
+            shape = RoundedCornerShape(28.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
+                // Celebration
+                Text(
+                    text = "🎉",
+                    fontSize = 80.sp,
+                    textAlign = TextAlign.Center
+                )
+                
+                Text(
+                    text = "Game Complete!",
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                    textAlign = TextAlign.Center
+                )
+                
+                Text(
+                    text = "You completed all $finalLevel levels!",
+                    fontSize = 20.sp,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                
+                // Score display
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    ),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Final Score",
+                            fontSize = 16.sp,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Text(
+                            text = "$finalScore",
+                            fontSize = 36.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                // Nickname input
+                Text(
+                    text = "Enter your name for the leaderboard:",
+                    fontSize = 16.sp,
+                    textAlign = TextAlign.Center
+                )
+                
+                OutlinedTextField(
+                    value = nickname,
+                    onValueChange = { 
+                        if (it.length <= 15) nickname = it 
+                    },
+                    label = { Text("Nickname") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                )
+                
+                Text(
+                    text = "${nickname.length}/15 characters",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                )
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                // Submit button
+                Button(
+                    onClick = {
+                        val finalNickname = nickname.trim().ifEmpty { "Anonymous" }
+                        onSubmit(finalNickname)
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    ),
+                    enabled = nickname.trim().isNotEmpty() || nickname.isEmpty()
+                ) {
+                    Text(
+                        text = "Submit Score",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                
+                TextButton(
+                    onClick = { onSubmit("Anonymous") }
+                ) {
+                    Text("Skip (submit as Anonymous)")
+                }
+            }
+        }
     }
 }
 

@@ -105,7 +105,18 @@ class GameViewModel : ViewModel() {
     }
     
     fun nextLevel() {
-        val newLevel = _gameState.value.currentLevel + 1
+        val currentLevel = _gameState.value.currentLevel
+        
+        // Check if game is completed
+        if (currentLevel >= GameState.MAX_LEVEL) {
+            _gameState.value = _gameState.value.copy(
+                showSuccessDialog = false,
+                isGameCompleted = true
+            )
+            return
+        }
+        
+        val newLevel = currentLevel + 1
         val (targetColor, recipe) = LevelManager.generateTargetColor(newLevel)
         
         _gameState.value = _gameState.value.copy(
@@ -157,6 +168,12 @@ class GameViewModel : ViewModel() {
     fun resetGame() {
         _gameState.value = GameState()
         startNewLevel()
+    }
+    
+    fun completeGame() {
+        _gameState.value = _gameState.value.copy(
+            isGameCompleted = false
+        )
     }
 }
 

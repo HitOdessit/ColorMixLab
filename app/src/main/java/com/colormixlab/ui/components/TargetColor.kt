@@ -29,12 +29,12 @@ fun TargetColor(
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground
         )
-        
+
         Spacer(modifier = Modifier.height(4.dp))
-        
+
         Box(
             modifier = Modifier
-                .size(60.dp)
+                .size(75.dp)
                 .border(3.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(10.dp))
                 .background(targetColor, RoundedCornerShape(10.dp))
         )

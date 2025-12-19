@@ -118,22 +118,23 @@ fun MixingBowl(
     val isEmpty = animatedSlices.isEmpty()
 
     Box(
-        modifier = modifier.size(160.dp),
+        modifier = modifier.size(185.dp),
         contentAlignment = Alignment.Center
     ) {
         Box(
             modifier = Modifier
-                .size(160.dp)
+                .size(203.dp)
                 .border(6.dp, MaterialTheme.colorScheme.onBackground, CircleShape),
             contentAlignment = Alignment.Center
         ) {
-            Canvas(modifier = Modifier.size(160.dp)) {
+            Canvas(modifier = Modifier.size(185.dp)) {
                 val radius = size.minDimension / 2
                 val centerX = size.width / 2
                 val centerY = size.height / 2
 
-                // Calculate inner radius (75% of area = sqrt(0.75) ≈ 0.866 of radius)
-                val innerRadius = radius * sqrt(0.75f)
+                // Keep inner circle same absolute size as before (160dp * sqrt(0.75) / 2)
+                // Old inner radius was 80 * sqrt(0.75) ≈ 69.3dp
+                val innerRadius = 69.3f * density
 
                 // Draw the mixed color in the center
                 drawCircle(

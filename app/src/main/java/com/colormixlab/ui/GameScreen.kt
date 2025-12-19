@@ -139,10 +139,13 @@ fun GameScreen(
             )
             
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             // Center: Mixing Bowl
-            MixingBowl(mixedColor = state.mixedColor)
-            
+            MixingBowl(
+                drops = state.drops,
+                mixedColor = state.mixedColor
+            )
+
             Spacer(modifier = Modifier.height(8.dp))
             
             // Color buttons in flexible grid

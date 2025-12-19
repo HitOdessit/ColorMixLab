@@ -31,9 +31,9 @@ fun LeaderboardDialog(
     Dialog(onDismissRequest = onDismiss) {
         Card(
             modifier = Modifier
-                .fillMaxWidth(0.98f)
-                .fillMaxHeight(0.85f)
-                .padding(8.dp),
+                .fillMaxWidth(0.99f)
+                .fillMaxHeight(0.88f)
+                .padding(6.dp),
             shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surface
@@ -43,7 +43,7 @@ fun LeaderboardDialog(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(20.dp)
+                    .padding(16.dp)
             ) {
                 // Header
                 Row(
@@ -56,12 +56,12 @@ fun LeaderboardDialog(
                             imageVector = Icons.Default.Star,
                             contentDescription = "Leaderboard",
                             tint = Color(0xFFFFD700),
-                            modifier = Modifier.size(32.dp)
+                            modifier = Modifier.size(28.dp)
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = "Leaderboard",
-                            fontSize = 28.sp,
+                            fontSize = 26.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -76,7 +76,7 @@ fun LeaderboardDialog(
                     }
                 }
 
-                Divider(modifier = Modifier.padding(vertical = 12.dp))
+                Divider(modifier = Modifier.padding(vertical = 8.dp))
 
                 // Entries
                 if (entries.isEmpty()) {
@@ -94,7 +94,7 @@ fun LeaderboardDialog(
                 } else {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         itemsIndexed(entries) { index, entry ->
                             LeaderboardEntryItem(
@@ -140,6 +140,10 @@ fun LeaderboardEntryItem(
         com.colormixlab.game.Difficulty.HARD -> "Hard"
     }
 
+    // Format timestamp
+    val dateFormat = SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault())
+    val formattedDate = dateFormat.format(Date(entry.timestamp))
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -150,27 +154,27 @@ fun LeaderboardEntryItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 12.dp),
+                .padding(horizontal = 10.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             // Rank
             Text(
                 text = "#$rank",
-                fontSize = 20.sp,
+                fontSize = 19.sp,
                 fontWeight = FontWeight.Bold,
                 color = rankColor,
-                modifier = Modifier.width(42.dp)
+                modifier = Modifier.width(38.dp)
             )
 
             // Nickname and details
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
+                verticalArrangement = Arrangement.spacedBy(1.dp)
             ) {
                 Text(
                     text = entry.nickname,
-                    fontSize = 18.sp,
+                    fontSize = 17.sp,
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -178,18 +182,24 @@ fun LeaderboardEntryItem(
                 )
                 Text(
                     text = "$difficultyEmoji $difficultyName • Lvl ${entry.level}",
-                    fontSize = 14.sp,
+                    fontSize = 13.sp,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
                     maxLines = 1,
                     overflow = TextOverflow.Visible
+                )
+                Text(
+                    text = formattedDate,
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    maxLines = 1
                 )
             }
 
             // Score
             Text(
                 text = "${entry.score}",
-                fontSize = 20.sp,
+                fontSize = 19.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
             )

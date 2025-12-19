@@ -45,7 +45,7 @@ class GameViewModel : ViewModel() {
         val points = calculatePoints(similarity)
         val newScore = (_gameState.value.currentScore + points).coerceAtLeast(0)
         
-        val isSuccess = similarity >= 0.75f
+        val isSuccess = similarity >= 0.80f  // Adjusted to 80%
         
         _gameState.value = _gameState.value.copy(
             isMatched = isSuccess,
@@ -57,42 +57,50 @@ class GameViewModel : ViewModel() {
     
     fun calculatePoints(similarity: Float): Int {
         return when {
-            similarity >= 1.0f -> 150  // 100 + 50 bonus
-            similarity >= 0.90f -> 80
-            similarity >= 0.80f -> 60
-            similarity >= 0.75f -> 40  // Pass threshold
-            // Below 75% - graduated negative points
-            similarity >= 0.70f -> -10  // Small penalty
-            similarity >= 0.60f -> -20  // Medium penalty
-            similarity >= 0.50f -> -30  // Large penalty
-            similarity >= 0.40f -> -40  // Very large penalty
-            else -> -50  // Maximum penalty
+            similarity >= 1.0f -> 150  // 100 + 50 bonus - Perfect match
+            similarity >= 0.95f -> 100  // Excellent
+            similarity >= 0.90f -> 80   // Great
+            similarity >= 0.85f -> 60   // Very good
+            similarity >= 0.80f -> 40   // Good - Pass threshold
+            // Below 80% - graduated negative points
+            similarity >= 0.75f -> -10  // Close but not enough
+            similarity >= 0.70f -> -15  // Need more precision
+            similarity >= 0.65f -> -20  // Getting further
+            similarity >= 0.60f -> -25  // Not close enough
+            similarity >= 0.50f -> -35  // Way off
+            else -> -50  // Very far from target
         }
     }
     
     fun getResultMessage(similarity: Float): String {
         return when {
             similarity >= 1.0f -> "Perfect Match!"
-            similarity >= 0.90f -> "Excellent Mix!"
-            similarity >= 0.80f -> "Great Job!"
-            similarity >= 0.75f -> "Nice Work!"
-            similarity >= 0.70f -> "Almost There!"
+            similarity >= 0.95f -> "Excellent Mix!"
+            similarity >= 0.90f -> "Great Job!"
+            similarity >= 0.85f -> "Very Good!"
+            similarity >= 0.80f -> "Nice Work!"
+            similarity >= 0.75f -> "Almost There!"
+            similarity >= 0.70f -> "Close!"
+            similarity >= 0.65f -> "Getting Closer!"
             similarity >= 0.60f -> "Keep Trying!"
-            similarity >= 0.50f -> "Try Again!"
-            else -> "Not Close Enough!"
+            similarity >= 0.50f -> "Not Quite!"
+            else -> "Try Harder!"
         }
     }
     
     fun getResultEmoji(similarity: Float): String {
         return when {
             similarity >= 1.0f -> "🎉"
-            similarity >= 0.90f -> "⭐"
-            similarity >= 0.80f -> "👍"
-            similarity >= 0.75f -> "👌"
-            similarity >= 0.70f -> "🎨"
-            similarity >= 0.60f -> "💪"
-            similarity >= 0.50f -> "🔄"
-            else -> "😕"
+            similarity >= 0.95f -> "⭐"
+            similarity >= 0.90f -> "👍"
+            similarity >= 0.85f -> "😊"
+            similarity >= 0.80f -> "👌"
+            similarity >= 0.75f -> "🎨"
+            similarity >= 0.70f -> "💪"
+            similarity >= 0.65f -> "🤔"
+            similarity >= 0.60f -> "🔄"
+            similarity >= 0.50f -> "😕"
+            else -> "😢"
         }
     }
     

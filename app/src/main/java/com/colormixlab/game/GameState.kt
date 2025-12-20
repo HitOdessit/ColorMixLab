@@ -9,6 +9,12 @@ enum class Difficulty {
     HARD     // 20s, 1.25x points
 }
 
+enum class MathChallengeType {
+    NONE,           // No challenge needed
+    COLOR_UNLOCK,   // Before unlocking new color (3 questions)
+    MILESTONE       // Every 3 levels after level 19 (3 questions)
+}
+
 data class GameState(
     val currentLevel: Int = 1,
     val targetColor: Color = Color.White,
@@ -27,7 +33,10 @@ data class GameState(
     val isTimerActive: Boolean = false,
     val isTimerPaused: Boolean = false,
     val lastBasePoints: Int = 0,
-    val lastTimeBonus: Int = 0
+    val lastTimeBonus: Int = 0,
+    val needsMathChallenge: Boolean = false,
+    val mathChallengeType: MathChallengeType = MathChallengeType.NONE,
+    val mathChallengeCompleted: Boolean = false
 ) {
     fun getDropCount(color: GameColor): Int = drops[color] ?: 0
     

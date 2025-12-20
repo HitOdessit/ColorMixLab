@@ -38,6 +38,7 @@ import com.colormixlab.model.LeaderboardEntry
 import com.colormixlab.ui.components.ColorButton
 import com.colormixlab.ui.components.ConfettiEffect
 import com.colormixlab.ui.components.LevelDisplay
+import com.colormixlab.ui.components.MathChallengeDialog
 import com.colormixlab.ui.components.MixingBowl
 import com.colormixlab.ui.components.SparkleEffect
 import com.colormixlab.ui.components.TargetColor
@@ -63,8 +64,8 @@ fun GameScreen(
     val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
     
     // Pause timer when dialogs are open
-    LaunchedEffect(state.showSuccessDialog, showMenu) {
-        if (state.showSuccessDialog || showMenu) {
+    LaunchedEffect(state.showSuccessDialog, showMenu, state.needsMathChallenge) {
+        if (state.showSuccessDialog || showMenu || state.needsMathChallenge) {
             viewModel.pauseTimer()
         } else {
             viewModel.resumeTimer()
@@ -168,6 +169,22 @@ fun GameScreen(
             onDismiss = {
                 showFinalLeaderboard = false
                 onNavigateToIntro()
+            }
+        )
+    }
+    
+    // Math Challenge Dialog
+    if (state.needsMathChallenge) {
+        val nextColorToUnlock = com.colormixlab.model.GameColor.getAllColors()
+            .firstOrNull { it.unlockLevel == state.currentLevel }
+        
+        MathChallengeDialog(
+            difficulty = state.difficulty,
+            level = state.currentLevel,
+            challengeType = state.mathChallengeType,
+            nextColorToUnlock = nextColorToUnlock,
+            onDismiss = {
+                viewModel.completeMathChallenge()
             }
         )
     }

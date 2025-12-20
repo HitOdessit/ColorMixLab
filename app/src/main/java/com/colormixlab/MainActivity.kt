@@ -13,6 +13,7 @@ import com.colormixlab.game.Difficulty
 import com.colormixlab.game.GameViewModel
 import com.colormixlab.ui.GameScreen
 import com.colormixlab.ui.IntroScreen
+import com.colormixlab.ui.MathChallengeScreen
 import com.colormixlab.ui.theme.ColorMixLabTheme
 
 class MainActivity : ComponentActivity() {
@@ -25,22 +26,29 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    var showIntro by remember { mutableStateOf(true) }
+                    var currentScreen by remember { mutableStateOf("intro") }
+                    var selectedDifficulty by remember { mutableStateOf(Difficulty.MEDIUM) }
                     val viewModel: GameViewModel = viewModel()
                     
-                    if (showIntro) {
-                        IntroScreen(
+                    when (currentScreen) {
+                        "intro" -> IntroScreen(
                             onStartGame = { difficulty ->
-                                viewModel.setDifficulty(difficulty)
-                                viewModel.resetGame()
-                                showIntro = false
+                                selectedDifficulty = difficulty
+                                currentScreen = "mathChallenge"
                             }
                         )
-                    } else {
-                        GameScreen(
+                        "mathChallenge" -> MathChallengeScreen(
+                            difficulty = selectedDifficulty,
+                            onChallengeComplete = {
+                                viewModel.setDifficulty(selectedDifficulty)
+                                viewModel.resetGame()
+                                currentScreen = "game"
+                            }
+                        )
+                        "game" -> GameScreen(
                             viewModel = viewModel,
                             onNavigateToIntro = {
-                                showIntro = true
+                                currentScreen = "intro"
                             }
                         )
                     }

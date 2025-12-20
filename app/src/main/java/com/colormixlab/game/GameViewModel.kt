@@ -156,6 +156,21 @@ class GameViewModel : ViewModel() {
         }
         
         val newLevel = currentLevel + 1
+        
+        // Check if this level unlocks a new color
+        val colorUnlockLevels = listOf(4, 7, 10, 13, 16, 19)
+        val needsColorUnlockChallenge = newLevel in colorUnlockLevels
+        
+        // Check if this is a milestone level (every 3 levels after 19)
+        val needsMilestoneChallenge = newLevel > 19 && (newLevel - 19) % 3 == 0
+        
+        val needsChallenge = needsColorUnlockChallenge || needsMilestoneChallenge
+        val challengeType = when {
+            needsColorUnlockChallenge -> MathChallengeType.COLOR_UNLOCK
+            needsMilestoneChallenge -> MathChallengeType.MILESTONE
+            else -> MathChallengeType.NONE
+        }
+        
         val previousTarget = _gameState.value.targetColor
         val (targetColor, recipe) = LevelManager.generateTargetColor(newLevel, previousTarget)
         
@@ -163,7 +178,7 @@ class GameViewModel : ViewModel() {
         
         _gameState.value = _gameState.value.copy(
             currentLevel = newLevel,
-            unlockedColors = GameColor.getAvailableColors(newLevel),
+            unlockedColors = if (needsChallenge) _gameState.value.unlockedColors else GameColor.getAvailableColors(newLevel),
             targetColor = targetColor,
             targetRecipe = recipe,
             mixedColor = androidx.compose.ui.graphics.Color.White,
@@ -171,10 +186,15 @@ class GameViewModel : ViewModel() {
             isMatched = false,
             showSuccessDialog = false,
             hasCheckedThisRound = false,
-            similarity = 0f
+            similarity = 0f,
+            needsMathChallenge = needsChallenge,
+            mathChallengeType = challengeType,
+            mathChallengeCompleted = false
         )
         
-        startTimer()
+        if (!needsChallenge) {
+            startTimer()
+        }
     }
     
     fun retryLevel() {
@@ -198,6 +218,15 @@ class GameViewModel : ViewModel() {
     
     fun dismissSuccessDialog() {
         _gameState.value = _gameState.value.copy(showSuccessDialog = false)
+    }
+    
+    fun completeMathChallenge() {
+        _gameState.value = _gameState.value.copy(
+            needsMathChallenge = false,
+            mathChallengeCompleted = true,
+            unlockedColors = GameColor.getAvailableColors(_gameState.value.currentLevel)
+        )
+        startTimer()
     }
     
     private fun startNewLevel() {

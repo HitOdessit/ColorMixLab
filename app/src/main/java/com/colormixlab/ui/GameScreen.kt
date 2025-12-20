@@ -55,7 +55,6 @@ fun GameScreen(
     val leaderboardManager = remember { LeaderboardManager(context) }
     var showMenu by remember { mutableStateOf(false) }
     var showNicknameDialog by remember { mutableStateOf(false) }
-    var showLeaderboardAfterNickname by remember { mutableStateOf(false) }
     var showFinalLeaderboard by remember { mutableStateOf(false) }
     
     // Pause timer when dialogs are open
@@ -250,7 +249,6 @@ fun GameScreen(
                 leaderboardManager.clearLeaderboard()
             },
             onFinishGame = {
-                showLeaderboardAfterNickname = true
                 viewModel.forceFinishGame()
             },
             leaderboardEntries = leaderboardManager.getEntries()
@@ -274,18 +272,13 @@ fun GameScreen(
                 showNicknameDialog = false
                 viewModel.completeGame()
 
-                // Check if we should show leaderboard or navigate to intro
-                if (showLeaderboardAfterNickname) {
-                    showLeaderboardAfterNickname = false
-                    showFinalLeaderboard = true
-                } else {
-                    onNavigateToIntro()
-                }
+                // Always show leaderboard after game completion
+                showFinalLeaderboard = true
             }
         )
     }
 
-    // Final Leaderboard Dialog (shown after finish game)
+    // Final Leaderboard Dialog (shown after game completion)
     if (showFinalLeaderboard) {
         LeaderboardDialog(
             entries = leaderboardManager.getEntries(),

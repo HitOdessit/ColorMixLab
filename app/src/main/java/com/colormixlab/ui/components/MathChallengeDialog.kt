@@ -2,6 +2,7 @@ package com.colormixlab.ui.components
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -39,7 +40,9 @@ fun MathChallengeDialog(
     level: Int,
     challengeType: MathChallengeType,
     nextColorToUnlock: GameColor?,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onExit: () -> Unit = {},
+    onWrongAnswer: () -> Unit = {}
 ) {
     // Helper function to get timer duration for math challenge
     fun getTimerDuration(difficulty: Difficulty): Int? {
@@ -63,6 +66,7 @@ fun MathChallengeDialog(
     val context = LocalContext.current
     val hapticManager = remember { HapticManager(context) }
     val scope = rememberCoroutineScope()
+    var showExitConfirmation by remember { mutableStateOf(false) }
     
     // Timer countdown
     LaunchedEffect(challengeState.isTimerActive, challengeState.timeRemaining, challengeState.showingAnswer) {
@@ -70,10 +74,17 @@ fun MathChallengeDialog(
             val timeRemaining = challengeState.timeRemaining ?: return@LaunchedEffect
             if (timeRemaining > 0) {
                 delay(1000)
+                
+                // Haptic feedback when timer is 5 seconds or less
+                if (timeRemaining <= 5) {
+                    hapticManager.performHaptic(HapticManager.HapticType.LIGHT_TAP)
+                }
+                
                 challengeState = challengeState.copy(timeRemaining = timeRemaining - 1)
             } else {
                 // Time's up - treat as wrong answer
                 hapticManager.performHaptic(HapticManager.HapticType.ERROR)
+                onWrongAnswer() // Deduct points
                 challengeState = challengeState.copy(
                     showingAnswer = true,
                     lastAnswerCorrect = false,
@@ -92,10 +103,10 @@ fun MathChallengeDialog(
                     // Wait for user to click OK button (handled in UI)
                 }
                 Difficulty.MEDIUM -> {
-                    delay(3000)
+                    delay(550)
                     // Move to next question or complete
                     if (challengeState.consecutiveCorrect >= 3) {
-                        delay(500)
+                        delay(350)
                         onDismiss()
                     } else {
                         challengeState = challengeState.copy(
@@ -143,12 +154,13 @@ fun MathChallengeDialog(
                 containerColor = MaterialTheme.colorScheme.surface
             )
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
+            Box {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
                 // Header
                 val headerText = when (challengeType) {
                     MathChallengeType.COLOR_UNLOCK -> "🔓 Unlock ${nextColorToUnlock?.name ?: "New Color"}!"
@@ -170,6 +182,13 @@ fun MathChallengeDialog(
                     text = "Answer 3 questions correctly",
                     fontSize = 16.sp,
                     color = MaterialTheme.colorScheme.onSurface
+                )
+                
+                Text(
+                    text = "❌ Wrong answer: -75 points",
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.error,
+                    fontWeight = FontWeight.Medium
                 )
                 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -293,6 +312,7 @@ fun MathChallengeDialog(
                                                     hapticManager.performHaptic(HapticManager.HapticType.SUCCESS)
                                                 } else {
                                                     hapticManager.performHaptic(HapticManager.HapticType.ERROR)
+                                                    onWrongAnswer() // Deduct points for wrong answer
                                                 }
                                                 
                                                 challengeState = challengeState.copy(
@@ -347,10 +367,69 @@ fun MathChallengeDialog(
                         }
                     }
                 }
+            }  // End Column
+                
+            // Exit button (X) in top-right corner
+            Surface(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(8.dp),
+                shape = RoundedCornerShape(8.dp),
+                color = MaterialTheme.colorScheme.errorContainer,
+                tonalElevation = 2.dp
+            ) {
+                IconButton(
+                    onClick = { showExitConfirmation = true },
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Close,
+                        contentDescription = "Exit Game",
+                        tint = MaterialTheme.colorScheme.onErrorContainer,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
-        }
+        }  // End Box
+    }  // End Card
+}  // End Dialog
+
+    // Exit confirmation dialog
+    if (showExitConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showExitConfirmation = false },
+            title = {
+                Text(
+                    text = "Exit Game?",
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text("Are you sure you want to exit? Your current game progress will be lost.")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showExitConfirmation = false
+                        onExit()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text("Exit")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showExitConfirmation = false }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
-}
+}  // End MathChallengeDialog function
 
 @Composable
 fun DialogAnswerButton(

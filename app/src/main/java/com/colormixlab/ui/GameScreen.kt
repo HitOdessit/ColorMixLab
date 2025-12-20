@@ -25,6 +25,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -58,6 +59,15 @@ fun GameScreen(
     var showMenu by remember { mutableStateOf(false) }
     var showNicknameDialog by remember { mutableStateOf(false) }
     var showFinalLeaderboard by remember { mutableStateOf(false) }
+    
+    // Keep screen on during game
+    val view = LocalView.current
+    DisposableEffect(Unit) {
+        view.keepScreenOn = true
+        onDispose {
+            view.keepScreenOn = false
+        }
+    }
     
     // Check if we're in landscape mode
     val configuration = LocalConfiguration.current
@@ -185,6 +195,13 @@ fun GameScreen(
             nextColorToUnlock = nextColorToUnlock,
             onDismiss = {
                 viewModel.completeMathChallenge()
+            },
+            onExit = {
+                // Exit the game and return to intro
+                onNavigateToIntro()
+            },
+            onWrongAnswer = {
+                viewModel.penalizeMathMistake()
             }
         )
     }

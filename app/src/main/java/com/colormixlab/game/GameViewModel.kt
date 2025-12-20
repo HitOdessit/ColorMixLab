@@ -229,6 +229,11 @@ class GameViewModel : ViewModel() {
         startTimer()
     }
     
+    fun penalizeMathMistake() {
+        val newScore = (_gameState.value.currentScore - 75).coerceAtLeast(0)
+        _gameState.value = _gameState.value.copy(currentScore = newScore)
+    }
+    
     private fun startNewLevel() {
         val previousTarget = if (_gameState.value.currentLevel > 1) _gameState.value.targetColor else null
         val (targetColor, recipe) = LevelManager.generateTargetColor(_gameState.value.currentLevel, previousTarget)

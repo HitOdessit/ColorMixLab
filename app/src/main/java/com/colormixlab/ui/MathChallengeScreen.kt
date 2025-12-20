@@ -68,6 +68,12 @@ fun MathChallengeScreen(
             val timeRemaining = challengeState.timeRemaining ?: return@LaunchedEffect
             if (timeRemaining > 0) {
                 delay(1000)
+                
+                // Haptic feedback when timer is 5 seconds or less
+                if (timeRemaining <= 5) {
+                    hapticManager.performHaptic(HapticManager.HapticType.LIGHT_TAP)
+                }
+                
                 challengeState = challengeState.copy(timeRemaining = timeRemaining - 1)
             } else {
                 // Time's up - treat as wrong answer
@@ -90,7 +96,7 @@ fun MathChallengeScreen(
                     // Wait for user to click OK button (handled in UI)
                 }
                 Difficulty.MEDIUM -> {
-                    delay(3000)
+                    delay(1500)  // Faster animation: 1.5 seconds
                     // Move to next question
                     if (challengeState.consecutiveCorrect >= 5) {
                         showConfetti = true

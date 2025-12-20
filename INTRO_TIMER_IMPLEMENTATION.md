@@ -6,9 +6,9 @@ Successfully implemented a comprehensive intro screen with difficulty selection 
 ## Completed Features
 
 ### 1. Difficulty System ✅
-- **Easy Mode**: No timer, 0.5x points multiplier
-- **Medium Mode**: 40 seconds per level, 1.0x points multiplier (default)
-- **Hard Mode**: 20 seconds per level, 1.5x points multiplier
+- **Easy Mode**: No timer, 0.75x points multiplier
+- **Medium Mode**: 40 seconds per level, 1.0x points multiplier + time bonus (default)
+- **Hard Mode**: 20 seconds per level, 1.25x points multiplier + time bonus
 
 ### 2. Intro/Welcome Screen ✅
 **Location**: `app/src/main/java/com/colormixlab/ui/IntroScreen.kt`
@@ -22,9 +22,9 @@ Features:
   - Higher similarity = more points
   - Harder difficulty = more points
 - Three difficulty selection buttons with distinct styling:
-  - 🟢 Easy (Green) - "No Timer • Half Points"
-  - 🟡 Medium (Yellow) - "40s • Normal Points" [default]
-  - 🔴 Hard (Red) - "20s • +50% Points"
+  - 🟢 Easy (Green) - "No Timer • 75% Points"
+  - 🟡 Medium (Yellow) - "40s • 100% Points + Time Bonus" [default]
+  - 🔴 Hard (Red) - "20s • 125% Points + Time Bonus"
 - Visual selection indicator (checkmark)
 - Large "Start Game" button
 - "Leaderboard" button (opens leaderboard from intro)
@@ -80,7 +80,8 @@ companion object {
 
 Updated `calculatePoints()` to apply difficulty multipliers:
 - Base points calculated from similarity
-- Multiplier applied: Easy 0.5x, Medium 1.0x, Hard 1.5x
+- Multiplier applied: Easy 0.75x, Medium 1.0x, Hard 1.25x
+- Medium and Hard also receive time bonus (up to 50 points based on time remaining)
 - Works for both positive and negative points
 
 ### 6. Navigation System ✅
@@ -212,7 +213,8 @@ Game Complete → Nickname → IntroScreen
 ✅ Timer blinks red at ≤5 seconds
 ✅ Time expiration: -50 pts + auto-advance
 ✅ Restart returns to intro screen
-✅ Point multipliers: Easy 0.5x, Medium 1.0x, Hard 1.5x
+✅ Point multipliers: Easy 0.75x, Medium 1.0x, Hard 1.25x
+✅ Medium and Hard get time bonus (up to 50 pts)
 ✅ Leaderboard shows difficulty AND level
 ✅ Timer pauses/resumes with dialogs
 

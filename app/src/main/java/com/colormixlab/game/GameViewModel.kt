@@ -86,9 +86,9 @@ class GameViewModel : ViewModel() {
         }
 
         val multiplier = when (_gameState.value.difficulty) {
-            Difficulty.EASY -> 0.5f
+            Difficulty.EASY -> 0.75f
             Difficulty.MEDIUM -> 1.0f
-            Difficulty.HARD -> 1.5f
+            Difficulty.HARD -> 1.25f
         }
 
         return (basePoints * multiplier).toInt()

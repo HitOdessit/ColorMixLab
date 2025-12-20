@@ -115,7 +115,7 @@ fun IntroScreen(
                 isSelected = selectedDifficulty == Difficulty.EASY,
                 emoji = "🟢",
                 title = "Easy",
-                description = "No Timer • Half Points",
+                description = "No Timer • 75% Points",
                 onClick = { selectedDifficulty = Difficulty.EASY }
             )
             
@@ -125,7 +125,7 @@ fun IntroScreen(
                 isSelected = selectedDifficulty == Difficulty.MEDIUM,
                 emoji = "🟡",
                 title = "Medium",
-                description = "40s • Normal Points",
+                description = "40s • 100% Points + Time Bonus",
                 onClick = { selectedDifficulty = Difficulty.MEDIUM }
             )
             
@@ -135,7 +135,7 @@ fun IntroScreen(
                 isSelected = selectedDifficulty == Difficulty.HARD,
                 emoji = "🔴",
                 title = "Hard",
-                description = "20s • +50% Points",
+                description = "20s • 125% Points + Time Bonus",
                 onClick = { selectedDifficulty = Difficulty.HARD }
             )
             

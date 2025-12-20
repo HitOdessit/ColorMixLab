@@ -4,9 +4,9 @@ import androidx.compose.ui.graphics.Color
 import com.colormixlab.model.GameColor
 
 enum class Difficulty {
-    EASY,    // No timer, 0.5x points
+    EASY,    // No timer, 0.75x points
     MEDIUM,  // 40s, 1.0x points  
-    HARD     // 20s, 1.5x points
+    HARD     // 20s, 1.25x points
 }
 
 data class GameState(

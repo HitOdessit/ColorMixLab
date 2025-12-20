@@ -92,9 +92,9 @@ Create three game modes with different mechanics:
 Add to `GameState.kt`:
 ```kotlin
 enum class Difficulty {
-    EASY,    // No timer, 0.5x points
-    MEDIUM,  // 40s, 1.0x points
-    HARD     // 20s, 1.5x points
+    EASY,    // No timer, 0.75x points
+    MEDIUM,  // 40s, 1.0x points + time bonus
+    HARD     // 20s, 1.25x points + time bonus
 }
 
 data class GameState(
@@ -220,9 +220,9 @@ fun onTimerExpired() {
 - Title: "ColorMixLab 🎨" (large, centered)
 - Instructions card with bullet points
 - Three difficulty buttons (toggle/radio style):
-  - Easy: Green background, "🟢 Easy - No Timer (Half Points)"
-  - Medium: Yellow background, "🟡 Medium - 40s (Normal Points)" [default selected]
-  - Hard: Red background, "🔴 Hard - 20s (+50% Points)"
+  - Easy: Green background, "🟢 Easy - No Timer (75% Points)"
+  - Medium: Yellow background, "🟡 Medium - 40s (100% Points + Time Bonus)" [default selected]
+  - Hard: Red background, "🔴 Hard - 20s (125% Points + Time Bonus)"
 - Large "Start Game" button
 - "Leaderboard" button (opens leaderboard dialog)
 
@@ -295,17 +295,17 @@ Easy mode:     ∞     (gray, smaller) or hidden
 ```
 ┌──────────────────────────┐
 │ 🟢 Easy                   │
-│ No Timer • Half Points   │
+│ No Timer • 75% Points    │
 └──────────────────────────┘
 
 ┌──────────────────────────┐
 │ 🟡 Medium ✓              │ ← Selected (checkmark)
-│ 40s • Normal Points      │
+│ 40s • 100% Pts + Bonus   │
 └──────────────────────────┘
 
 ┌──────────────────────────┐
 │ 🔴 Hard                   │
-│ 20s • +50% Points        │
+│ 20s • 125% Pts + Bonus   │
 └──────────────────────────┘
 ```
 
@@ -411,7 +411,8 @@ Example entry:
 ✅ Timer blinks red at ≤5 seconds
 ✅ Time expiration: -50 pts + auto-advance
 ✅ Restart returns to intro screen
-✅ Point multipliers: Easy 0.5x, Medium 1.0x, Hard 1.5x
+✅ Point multipliers: Easy 0.75x, Medium 1.0x, Hard 1.25x
+✅ Time bonus for Medium and Hard (up to 50 pts)
 ✅ Leaderboard shows difficulty AND level
 ✅ Timer pauses/resumes with dialogs
 

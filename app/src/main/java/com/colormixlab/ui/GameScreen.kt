@@ -23,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -57,6 +58,10 @@ fun GameScreen(
     var showNicknameDialog by remember { mutableStateOf(false) }
     var showFinalLeaderboard by remember { mutableStateOf(false) }
     
+    // Check if we're in landscape mode
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+    
     // Pause timer when dialogs are open
     LaunchedEffect(state.showSuccessDialog, showMenu) {
         if (state.showSuccessDialog || showMenu) {
@@ -77,144 +82,22 @@ fun GameScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(12.dp)
+            .padding(if (isLandscape) 8.dp else 12.dp)
     ) {
-        // Main content in portrait layout
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
-        ) {
-            // Top section: Level and Target
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Level and Score on the left
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    // Menu button
-                    IconButton(
-                        onClick = { showMenu = true },
-                        modifier = Modifier.size(40.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Menu,
-                            contentDescription = "Menu",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                    
-                    LevelDisplay(level = state.currentLevel)
-                    
-                    // Animated score counter
-                    val animatedScore by animateIntAsState(
-                        targetValue = state.currentScore,
-                        animationSpec = spring(
-                            dampingRatio = 0.7f,
-                            stiffness = 200f
-                        ),
-                        label = "scoreAnimation"
-                    )
-                    
-                    Text(
-                        text = "Score: $animatedScore",
-                        fontSize = 17.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.animateContentSize()
-                    )
-                }
-                TargetColor(targetColor = state.targetColor)
-            }
-            
-            // Timer Display (center top)
-            TimerDisplay(
-                timeRemaining = state.timeRemainingSeconds,
-                difficulty = state.difficulty
+        if (isLandscape) {
+            LandscapeGameLayout(
+                state = state,
+                viewModel = viewModel,
+                hapticManager = hapticManager,
+                onShowMenu = { showMenu = true }
             )
-            
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Center: Mixing Bowl
-            MixingBowl(
-                drops = state.drops,
-                mixedColor = state.mixedColor
+        } else {
+            PortraitGameLayout(
+                state = state,
+                viewModel = viewModel,
+                hapticManager = hapticManager,
+                onShowMenu = { showMenu = true }
             )
-
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            // Color buttons in flexible grid
-            FlowRow(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                maxItemsInEachRow = 3
-            ) {
-                state.unlockedColors.forEach { color ->
-                    ColorButton(
-                        color = color,
-                        dropCount = state.getDropCount(color),
-                        onClick = {
-                            hapticManager.performHaptic(HapticManager.HapticType.LIGHT_TAP)
-                            viewModel.addColorDrop(color)
-                        },
-                        modifier = Modifier.padding(horizontal = 6.dp)
-                    )
-                }
-            }
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            // Action buttons
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)
-            ) {
-                Button(
-                    onClick = {
-                        hapticManager.performHaptic(HapticManager.HapticType.LIGHT_TAP)
-                        viewModel.checkMatch()
-                        if (viewModel.gameState.value.isMatched) {
-                            hapticManager.performHaptic(HapticManager.HapticType.SUCCESS)
-                        }
-                    },
-                    enabled = state.getTotalDrops() > 0 && !state.hasCheckedThisRound,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary
-                    ),
-                    modifier = Modifier.fillMaxWidth().height(48.dp)
-                ) {
-                    Text(
-                        text = if (state.hasCheckedThisRound) "Already Checked" else "Check Match!",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-                
-                Button(
-                    onClick = {
-                        hapticManager.performHaptic(HapticManager.HapticType.LIGHT_TAP)
-                        viewModel.clearBowl()
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error
-                    ),
-                    modifier = Modifier.fillMaxWidth().height(48.dp)
-                ) {
-                    Text(
-                        text = "Clear Bowl",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-            
-            Spacer(modifier = Modifier.height(4.dp))
         }
     }
     
@@ -956,6 +839,296 @@ fun NicknameDialog(
                     onClick = { onSubmit("Anonymous") }
                 ) {
                     Text("Skip (submit as Anonymous)", fontSize = 13.sp)
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun PortraitGameLayout(
+    state: com.colormixlab.game.GameState,
+    viewModel: GameViewModel,
+    hapticManager: HapticManager,
+    onShowMenu: () -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.SpaceBetween
+    ) {
+        // Top section: Level and Target
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Level and Score on the left
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                IconButton(
+                    onClick = onShowMenu,
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Menu,
+                        contentDescription = "Menu",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+                
+                LevelDisplay(level = state.currentLevel)
+                
+                val animatedScore by animateIntAsState(
+                    targetValue = state.currentScore,
+                    animationSpec = spring(dampingRatio = 0.7f, stiffness = 200f),
+                    label = "scoreAnimation"
+                )
+                
+                Text(
+                    text = "Score: $animatedScore",
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.animateContentSize()
+                )
+            }
+            TargetColor(targetColor = state.targetColor)
+        }
+        
+        TimerDisplay(
+            timeRemaining = state.timeRemainingSeconds,
+            difficulty = state.difficulty
+        )
+        
+        Spacer(modifier = Modifier.height(8.dp))
+
+        MixingBowl(
+            drops = state.drops,
+            mixedColor = state.mixedColor
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        FlowRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            maxItemsInEachRow = 3
+        ) {
+            state.unlockedColors.forEach { color ->
+                ColorButton(
+                    color = color,
+                    dropCount = state.getDropCount(color),
+                    onClick = {
+                        hapticManager.performHaptic(HapticManager.HapticType.LIGHT_TAP)
+                        viewModel.addColorDrop(color)
+                    },
+                    modifier = Modifier.padding(horizontal = 6.dp)
+                )
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)
+        ) {
+            Button(
+                onClick = {
+                    hapticManager.performHaptic(HapticManager.HapticType.LIGHT_TAP)
+                    viewModel.checkMatch()
+                    if (viewModel.gameState.value.isMatched) {
+                        hapticManager.performHaptic(HapticManager.HapticType.SUCCESS)
+                    }
+                },
+                enabled = state.getTotalDrops() > 0 && !state.hasCheckedThisRound,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                ),
+                modifier = Modifier.fillMaxWidth().height(48.dp)
+            ) {
+                Text(
+                    text = if (state.hasCheckedThisRound) "Already Checked" else "Check Match!",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            
+            Button(
+                onClick = {
+                    hapticManager.performHaptic(HapticManager.HapticType.LIGHT_TAP)
+                    viewModel.clearBowl()
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error
+                ),
+                modifier = Modifier.fillMaxWidth().height(48.dp)
+            ) {
+                Text(
+                    text = "Clear Bowl",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(4.dp))
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun LandscapeGameLayout(
+    state: com.colormixlab.game.GameState,
+    viewModel: GameViewModel,
+    hapticManager: HapticManager,
+    onShowMenu: () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxSize(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        // Left side: Target, Mixing Bowl, and Buttons
+        Column(
+            modifier = Modifier
+                .weight(0.45f)
+                .fillMaxHeight(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            // Top: Menu, Level, Score, Target
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        IconButton(
+                            onClick = onShowMenu,
+                            modifier = Modifier.size(36.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Menu,
+                                contentDescription = "Menu",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        
+                        LevelDisplay(level = state.currentLevel)
+                    }
+                    
+                    val animatedScore by animateIntAsState(
+                        targetValue = state.currentScore,
+                        animationSpec = spring(dampingRatio = 0.7f, stiffness = 200f),
+                        label = "scoreAnimation"
+                    )
+                    
+                    Text(
+                        text = "$animatedScore",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.animateContentSize()
+                    )
+                }
+                
+                TargetColor(targetColor = state.targetColor)
+                
+                TimerDisplay(
+                    timeRemaining = state.timeRemainingSeconds,
+                    difficulty = state.difficulty
+                )
+            }
+            
+            // Center: Mixing Bowl
+            MixingBowl(
+                drops = state.drops,
+                mixedColor = state.mixedColor
+            )
+            
+            // Bottom: Action buttons
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Button(
+                    onClick = {
+                        hapticManager.performHaptic(HapticManager.HapticType.LIGHT_TAP)
+                        viewModel.checkMatch()
+                        if (viewModel.gameState.value.isMatched) {
+                            hapticManager.performHaptic(HapticManager.HapticType.SUCCESS)
+                        }
+                    },
+                    enabled = state.getTotalDrops() > 0 && !state.hasCheckedThisRound,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    ),
+                    modifier = Modifier.fillMaxWidth().height(52.dp)
+                ) {
+                    Text(
+                        text = if (state.hasCheckedThisRound) "Already Checked" else "Check Match!",
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                
+                Button(
+                    onClick = {
+                        hapticManager.performHaptic(HapticManager.HapticType.LIGHT_TAP)
+                        viewModel.clearBowl()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    ),
+                    modifier = Modifier.fillMaxWidth().height(44.dp)
+                ) {
+                    Text(
+                        text = "Clear Bowl",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+        
+        // Right side: Color palette in a grid
+        Column(
+            modifier = Modifier
+                .weight(0.55f)
+                .fillMaxHeight(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                maxItemsInEachRow = 4
+            ) {
+                state.unlockedColors.forEach { color ->
+                    ColorButton(
+                        color = color,
+                        dropCount = state.getDropCount(color),
+                        onClick = {
+                            hapticManager.performHaptic(HapticManager.HapticType.LIGHT_TAP)
+                            viewModel.addColorDrop(color)
+                        },
+                        modifier = Modifier.padding(horizontal = 8.dp)
+                    )
                 }
             }
         }

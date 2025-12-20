@@ -118,7 +118,7 @@ fun MixingBowl(
     val isEmpty = animatedSlices.isEmpty()
 
     Box(
-        modifier = modifier.size(185.dp),
+        modifier = modifier.size(186.dp),
         contentAlignment = Alignment.Center
     ) {
         Box(
@@ -127,7 +127,7 @@ fun MixingBowl(
                 .border(6.dp, MaterialTheme.colorScheme.onBackground, CircleShape),
             contentAlignment = Alignment.Center
         ) {
-            Canvas(modifier = Modifier.size(185.dp)) {
+            Canvas(modifier = Modifier.size(186.dp)) {
                 val radius = size.minDimension / 2
                 val centerX = size.width / 2
                 val centerY = size.height / 2

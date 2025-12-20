@@ -6,6 +6,7 @@ import com.colormixlab.game.Difficulty
 import com.colormixlab.model.LeaderboardEntry
 import org.json.JSONArray
 import org.json.JSONObject
+import java.util.Calendar
 
 class LeaderboardManager(context: Context) {
     private val prefs: SharedPreferences = context.getSharedPreferences(
@@ -15,7 +16,7 @@ class LeaderboardManager(context: Context) {
     
     companion object {
         private const val KEY_ENTRIES = "leaderboard_entries"
-        private const val MAX_ENTRIES = 50
+        private const val MAX_ENTRIES = 100 // Increased to store more history
     }
     
     fun addEntry(entry: LeaderboardEntry) {
@@ -55,6 +56,68 @@ class LeaderboardManager(context: Context) {
         }
     }
     
+    /**
+     * Get entries from today (since midnight)
+     */
+    fun getTodayEntries(limit: Int = 5): List<LeaderboardEntry> {
+        val todayStart = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+        
+        return getEntries()
+            .filter { it.timestamp >= todayStart }
+            .sortedByDescending { it.score }
+            .take(limit)
+    }
+    
+    /**
+     * Get entries from this week (since Monday)
+     */
+    fun getWeekEntries(limit: Int = 5): List<LeaderboardEntry> {
+        val weekStart = Calendar.getInstance().apply {
+            set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+        
+        return getEntries()
+            .filter { it.timestamp >= weekStart }
+            .sortedByDescending { it.score }
+            .take(limit)
+    }
+    
+    /**
+     * Get entries from this month
+     */
+    fun getMonthEntries(limit: Int = 5): List<LeaderboardEntry> {
+        val monthStart = Calendar.getInstance().apply {
+            set(Calendar.DAY_OF_MONTH, 1)
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+        
+        return getEntries()
+            .filter { it.timestamp >= monthStart }
+            .sortedByDescending { it.score }
+            .take(limit)
+    }
+    
+    /**
+     * Get all-time top entries
+     */
+    fun getAllTimeEntries(limit: Int = 10): List<LeaderboardEntry> {
+        return getEntries()
+            .sortedByDescending { it.score }
+            .take(limit)
+    }
+    
     fun clearLeaderboard() {
         prefs.edit().remove(KEY_ENTRIES).apply()
     }
@@ -84,4 +147,3 @@ class LeaderboardManager(context: Context) {
         return entries.indexOfFirst { it.score <= score } + 1
     }
 }
-

@@ -55,7 +55,7 @@ fun IntroScreen(
             // Version
             Text(
                 text = "v${BuildConfig.VERSION_NAME}",
-                fontSize = 11.sp,
+                fontSize = 13.sp,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
                 textAlign = TextAlign.Center,
                 modifier = Modifier.offset(y = (-8).dp)

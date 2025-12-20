@@ -24,6 +24,8 @@ data class MathChallengeState(
     val currentQuestion: MathQuestion? = null,
     val showingAnswer: Boolean = false,
     val lastAnswerCorrect: Boolean = false,
-    val selectedAnswer: Int? = null
+    val selectedAnswer: Int? = null,
+    val timeRemaining: Int? = null,
+    val isTimerActive: Boolean = false
 )
 

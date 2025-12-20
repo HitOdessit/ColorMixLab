@@ -41,17 +41,48 @@ fun MathChallengeDialog(
     nextColorToUnlock: GameColor?,
     onDismiss: () -> Unit
 ) {
+    // Helper function to get timer duration for math challenge
+    fun getTimerDuration(difficulty: Difficulty): Int? {
+        return when (difficulty) {
+            Difficulty.EASY -> null // No timer
+            Difficulty.MEDIUM -> 20
+            Difficulty.HARD -> 10
+        }
+    }
+
     var challengeState by remember {
         mutableStateOf(
             MathChallengeState(
-                currentQuestion = MathQuestionGenerator.generateQuestion(difficulty, level)
+                currentQuestion = MathQuestionGenerator.generateQuestion(difficulty, level),
+                timeRemaining = getTimerDuration(difficulty),
+                isTimerActive = getTimerDuration(difficulty) != null
             )
         )
     }
-    
+
     val context = LocalContext.current
     val hapticManager = remember { HapticManager(context) }
     val scope = rememberCoroutineScope()
+    
+    // Timer countdown
+    LaunchedEffect(challengeState.isTimerActive, challengeState.timeRemaining, challengeState.showingAnswer) {
+        if (challengeState.isTimerActive && !challengeState.showingAnswer) {
+            val timeRemaining = challengeState.timeRemaining ?: return@LaunchedEffect
+            if (timeRemaining > 0) {
+                delay(1000)
+                challengeState = challengeState.copy(timeRemaining = timeRemaining - 1)
+            } else {
+                // Time's up - treat as wrong answer
+                hapticManager.performHaptic(HapticManager.HapticType.ERROR)
+                challengeState = challengeState.copy(
+                    showingAnswer = true,
+                    lastAnswerCorrect = false,
+                    consecutiveCorrect = 0, // Reset on wrong answer in dialog
+                    isTimerActive = false
+                )
+            }
+        }
+    }
     
     // Handle answer feedback timing
     LaunchedEffect(challengeState.showingAnswer) {
@@ -70,7 +101,9 @@ fun MathChallengeDialog(
                         challengeState = challengeState.copy(
                             currentQuestion = MathQuestionGenerator.generateQuestion(difficulty, level),
                             showingAnswer = false,
-                            selectedAnswer = null
+                            selectedAnswer = null,
+                            timeRemaining = getTimerDuration(difficulty),
+                            isTimerActive = getTimerDuration(difficulty) != null
                         )
                     }
                 }
@@ -84,7 +117,9 @@ fun MathChallengeDialog(
                         challengeState = challengeState.copy(
                             currentQuestion = MathQuestionGenerator.generateQuestion(difficulty, level),
                             showingAnswer = false,
-                            selectedAnswer = null
+                            selectedAnswer = null,
+                            timeRemaining = getTimerDuration(difficulty),
+                            isTimerActive = getTimerDuration(difficulty) != null
                         )
                     }
                 }
@@ -151,12 +186,48 @@ fun MathChallengeDialog(
                             .padding(12.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(
-                            text = "Correct: ${challengeState.consecutiveCorrect}/3",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Correct: ${challengeState.consecutiveCorrect}/3",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                            
+                            // Timer display
+                            challengeState.timeRemaining?.let { time ->
+                                val timerColor = when {
+                                    time <= 5 -> Color.Red
+                                    time <= 10 -> Color(0xFFFF9800) // Orange
+                                    else -> MaterialTheme.colorScheme.primary
+                                }
+                                
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Text(
+                                        text = "⏱",
+                                        fontSize = 16.sp
+                                    )
+                                    Text(
+                                        text = "$time",
+                                        fontSize = 18.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = timerColor
+                                    )
+                                    Text(
+                                        text = "s",
+                                        fontSize = 12.sp,
+                                        color = timerColor.copy(alpha = 0.7f)
+                                    )
+                                }
+                            }
+                        }
                         
                         Spacer(modifier = Modifier.height(8.dp))
                         
@@ -228,6 +299,7 @@ fun MathChallengeDialog(
                                                     selectedAnswer = answer,
                                                     showingAnswer = true,
                                                     lastAnswerCorrect = isCorrect,
+                                                    isTimerActive = false, // Stop timer
                                                     consecutiveCorrect = if (isCorrect) {
                                                         challengeState.consecutiveCorrect + 1
                                                     } else {
@@ -254,7 +326,9 @@ fun MathChallengeDialog(
                                     challengeState = challengeState.copy(
                                         currentQuestion = MathQuestionGenerator.generateQuestion(difficulty, level),
                                         showingAnswer = false,
-                                        selectedAnswer = null
+                                        selectedAnswer = null,
+                                        timeRemaining = getTimerDuration(difficulty),
+                                        isTimerActive = getTimerDuration(difficulty) != null
                                     )
                                 }
                             },

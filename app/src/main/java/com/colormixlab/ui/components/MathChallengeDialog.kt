@@ -2,9 +2,13 @@ package com.colormixlab.ui.components
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -27,6 +31,7 @@ import com.colormixlab.game.math.MathQuestionGenerator
 import com.colormixlab.model.GameColor
 import com.colormixlab.utils.HapticManager
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun MathChallengeDialog(
@@ -46,6 +51,7 @@ fun MathChallengeDialog(
     
     val context = LocalContext.current
     val hapticManager = remember { HapticManager(context) }
+    val scope = rememberCoroutineScope()
     
     // Handle answer feedback timing
     LaunchedEffect(challengeState.showingAnswer) {
@@ -211,6 +217,7 @@ fun MathChallengeDialog(
                                             if (!challengeState.showingAnswer) {
                                                 val isCorrect = answer == question.correctAnswer
 
+                                                // Single haptic feedback for better performance
                                                 if (isCorrect) {
                                                     hapticManager.performHaptic(HapticManager.HapticType.SUCCESS)
                                                 } else {
@@ -280,42 +287,40 @@ fun DialogAnswerButton(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    // Shake animation for wrong answer
-    var shouldShake by remember { mutableStateOf(false) }
-    
+    // Shake animation for wrong answer using Animatable
+    val offsetX = remember { Animatable(0f) }
+
     LaunchedEffect(showingAnswer, isSelected, isCorrect) {
         if (showingAnswer && isSelected && !isCorrect) {
-            shouldShake = true
-            delay(500)
-            shouldShake = false
+            // Quick shake animation
+            repeat(3) {
+                offsetX.animateTo(6f, animationSpec = tween(50))
+                offsetX.animateTo(-6f, animationSpec = tween(50))
+            }
+            offsetX.animateTo(0f, animationSpec = tween(50))
         }
     }
-    
-    val offsetX by animateFloatAsState(
-        targetValue = if (shouldShake) {
-            // Create shake effect
-            when ((System.currentTimeMillis() / 50) % 4) {
-                0L -> -6f
-                1L -> 6f
-                2L -> -6f
-                else -> 6f
-            }
-        } else 0f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioHighBouncy,
-            stiffness = Spring.StiffnessHigh
-        )
-    )
-    
+
     val scale by animateFloatAsState(
         targetValue = if (isSelected && showingAnswer) {
-            if (isCorrect) 1.1f else 0.95f
+            if (isCorrect) 1.15f else 0.95f
         } else if (isSelected) 0.95f else 1f,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "scale"
+    )
+
+    // Simplified pulse animation for correct answer
+    val pulse by animateFloatAsState(
+        targetValue = if (showingAnswer && isSelected && isCorrect) 1f else 0f,
+        animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
+        label = "pulse"
     )
     
     val backgroundColor = when {
-        showingAnswer && isCorrect -> Color(0xFF4CAF50) // Green for correct
+        showingAnswer && isCorrect -> Color(0xFF4CAF50) // Bright green for correct
         showingAnswer && isSelected && !isCorrect -> Color(0xFFF44336) // Red for wrong selection
         else -> MaterialTheme.colorScheme.surface
     }
@@ -326,30 +331,94 @@ fun DialogAnswerButton(
         else -> MaterialTheme.colorScheme.outline
     }
     
-    Button(
-        onClick = onClick,
+    val borderWidth = if (showingAnswer && isCorrect) 4.dp else 2.dp
+
+    Box(
         modifier = modifier
             .aspectRatio(1f)
             .scale(scale)
-            .offset(x = offsetX.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = backgroundColor
-        ),
-        shape = RoundedCornerShape(8.dp),
-        border = androidx.compose.foundation.BorderStroke(2.dp, borderColor),
-        enabled = !showingAnswer,
-        contentPadding = PaddingValues(4.dp)
+            .offset(x = offsetX.value.dp),
+        contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = answer.toString(),
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            color = if (showingAnswer && (isCorrect || (isSelected && !isCorrect))) {
-                Color.White
-            } else {
-                MaterialTheme.colorScheme.onSurface
+        // Simplified glow effect for correct answer
+        if (showingAnswer && isSelected && isCorrect && pulse > 0.1f) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .scale(1.15f + pulse * 0.15f)
+                    .background(
+                        color = Color(0xFF4CAF50).copy(alpha = 0.25f * pulse),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+            )
+        }
+        
+        Button(
+            onClick = onClick,
+            modifier = Modifier.fillMaxSize(),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = backgroundColor
+            ),
+            shape = RoundedCornerShape(8.dp),
+            border = androidx.compose.foundation.BorderStroke(borderWidth, borderColor),
+            enabled = !showingAnswer,
+            contentPadding = PaddingValues(4.dp)
+        ) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                // Show number
+                Text(
+                    text = answer.toString(),
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (showingAnswer && (isCorrect || (isSelected && !isCorrect))) {
+                        Color.White
+                    } else {
+                        MaterialTheme.colorScheme.onSurface
+                    }
+                )
+                
+                // Show icon overlay for feedback
+                if (showingAnswer) {
+                    if (isSelected && isCorrect) {
+                        Icon(
+                            imageVector = Icons.Filled.Check,
+                            contentDescription = "Correct",
+                            tint = Color.White,
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(2.dp)
+                                .size(16.dp)
+                        )
+                    } else if (isSelected && !isCorrect) {
+                        Icon(
+                            imageVector = Icons.Filled.Close,
+                            contentDescription = "Wrong",
+                            tint = Color.White,
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(2.dp)
+                                .size(16.dp)
+                        )
+                    }
+                    
+                    // Highlight correct answer if it wasn't selected
+                    if (isCorrect && !isSelected) {
+                        Icon(
+                            imageVector = Icons.Filled.Check,
+                            contentDescription = "Correct Answer",
+                            tint = Color.White,
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(2.dp)
+                                .size(16.dp)
+                        )
+                    }
+                }
             }
-        )
+        }
     }
 }
 

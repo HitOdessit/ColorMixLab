@@ -43,6 +43,9 @@ class MainActivity : ComponentActivity() {
                                 viewModel.setDifficulty(selectedDifficulty)
                                 viewModel.resetGame()
                                 currentScreen = "game"
+                            },
+                            onBack = {
+                                currentScreen = "intro"
                             }
                         )
                         "game" -> GameScreen(

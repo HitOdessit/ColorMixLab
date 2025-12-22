@@ -35,6 +35,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.colormixlab.data.LeaderboardManager
 import com.colormixlab.game.Difficulty
 import com.colormixlab.game.GameViewModel
+import com.colormixlab.model.GameColor
 import com.colormixlab.model.LeaderboardEntry
 import com.colormixlab.ui.components.ColorButton
 import com.colormixlab.ui.components.ConfettiEffect
@@ -120,6 +121,7 @@ fun GameScreen(
             level = state.currentLevel,
             basePoints = state.lastBasePoints,
             timeBonus = state.lastTimeBonus,
+            unlockedColors = state.unlockedColors,
             onNextLevel = { viewModel.nextLevel() },
             onRetry = { viewModel.retryLevel() },
             getMessage = { viewModel.getResultMessage(it) },
@@ -214,6 +216,7 @@ fun ResultDialog(
     level: Int,
     basePoints: Int,
     timeBonus: Int,
+    unlockedColors: List<GameColor>,
     onNextLevel: () -> Unit,
     onRetry: () -> Unit,
     getMessage: (Float) -> String,
@@ -224,6 +227,17 @@ fun ResultDialog(
     val emoji = remember(similarity) { getEmoji(similarity) }
     val percentage = remember(similarity) { (similarity * 100).toInt() }
     val totalPoints = basePoints + timeBonus
+    
+    // Determine if this level completion unlocks a new color
+    val newlyUnlockedColor = remember(level, unlockedColors) {
+        if (isSuccess && level in listOf(3, 6, 9, 12, 15, 18)) {
+            val nextLevel = level + 1
+            // Find the color that will unlock at the next level
+            GameColor.getAllColors().find { it.unlockLevel == nextLevel }
+        } else {
+            null
+        }
+    }
 
     Dialog(onDismissRequest = { }) {
         Box(modifier = Modifier.fillMaxWidth(0.98f)) {
@@ -328,134 +342,39 @@ fun ResultDialog(
                         modifier = Modifier.fillMaxWidth()
                     )
                     
-                    // Show unlock message for special levels (on success)
-                    if (isSuccess) {
-                        when (level) {
-                            3 -> {
+                    // Show unlock message for new colors (dynamically based on what was selected)
+                    if (isSuccess && newlyUnlockedColor != null) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = newlyUnlockedColor.rgb.copy(alpha = 0.15f)
+                            ),
+                            shape = RoundedCornerShape(16.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                // Color preview
+                                Box(
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                        .background(
+                                            color = newlyUnlockedColor.rgb,
+                                            shape = RoundedCornerShape(12.dp)
+                                        )
+                                )
                                 Spacer(modifier = Modifier.height(8.dp))
-                                Card(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    colors = CardDefaults.cardColors(
-                                        containerColor = Color(0xFFF1C40F).copy(alpha = 0.1f)
-                                    ),
-                                    shape = RoundedCornerShape(16.dp)
-                                ) {
-                                    Text(
-                                        text = "🎨 Yellow Unlocked!",
-                                        fontSize = 20.sp,
-                                        color = Color(0xFFF1C40F),
-                                        fontWeight = FontWeight.Bold,
-                                        textAlign = TextAlign.Center,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(16.dp)
-                                    )
-                                }
-                            }
-                            6 -> {
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Card(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    colors = CardDefaults.cardColors(
-                                        containerColor = Color(0xFFE67E22).copy(alpha = 0.1f)
-                                    ),
-                                    shape = RoundedCornerShape(16.dp)
-                                ) {
-                                    Text(
-                                        text = "🧡 Orange Unlocked!",
-                                        fontSize = 20.sp,
-                                        color = Color(0xFFE67E22),
-                                        fontWeight = FontWeight.Bold,
-                                        textAlign = TextAlign.Center,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(16.dp)
-                                    )
-                                }
-                            }
-                            9 -> {
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Card(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    colors = CardDefaults.cardColors(
-                                        containerColor = Color(0xFF9B59B6).copy(alpha = 0.1f)
-                                    ),
-                                    shape = RoundedCornerShape(16.dp)
-                                ) {
-                                    Text(
-                                        text = "💜 Purple Unlocked!",
-                                        fontSize = 20.sp,
-                                        color = Color(0xFF9B59B6),
-                                        fontWeight = FontWeight.Bold,
-                                        textAlign = TextAlign.Center,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(16.dp)
-                                    )
-                                }
-                            }
-                            12 -> {
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Card(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    colors = CardDefaults.cardColors(
-                                        containerColor = Color(0xFFE91E63).copy(alpha = 0.1f)
-                                    ),
-                                    shape = RoundedCornerShape(16.dp)
-                                ) {
-                                    Text(
-                                        text = "💖 Pink Unlocked!",
-                                        fontSize = 20.sp,
-                                        color = Color(0xFFE91E63),
-                                        fontWeight = FontWeight.Bold,
-                                        textAlign = TextAlign.Center,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(16.dp)
-                                    )
-                                }
-                            }
-                            15 -> {
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Card(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    colors = CardDefaults.cardColors(
-                                        containerColor = Color(0xFFFFFFFF).copy(alpha = 0.2f)
-                                    ),
-                                    shape = RoundedCornerShape(16.dp)
-                                ) {
-                                    Text(
-                                        text = "🤍 White Unlocked!",
-                                        fontSize = 20.sp,
-                                        color = Color(0xFF666666),
-                                        fontWeight = FontWeight.Bold,
-                                        textAlign = TextAlign.Center,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(16.dp)
-                                    )
-                                }
-                            }
-                            18 -> {
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Card(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    colors = CardDefaults.cardColors(
-                                        containerColor = Color(0xFF000000).copy(alpha = 0.1f)
-                                    ),
-                                    shape = RoundedCornerShape(16.dp)
-                                ) {
-                                    Text(
-                                        text = "🖤 Black Unlocked!",
-                                        fontSize = 20.sp,
-                                        color = Color(0xFF000000),
-                                        fontWeight = FontWeight.Bold,
-                                        textAlign = TextAlign.Center,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(16.dp)
-                                    )
-                                }
+                                Text(
+                                    text = "🎨 ${newlyUnlockedColor.name} Unlocked!",
+                                    fontSize = 20.sp,
+                                    color = newlyUnlockedColor.rgb,
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = TextAlign.Center
+                                )
                             }
                         }
                     }

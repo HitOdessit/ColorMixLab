@@ -16,6 +16,8 @@ class GameViewModel : ViewModel() {
     private var timerJob: Job? = null
     
     init {
+        // Initialize game colors at the start
+        GameColor.initializeGameColors()
         startNewLevel()
     }
     
@@ -253,6 +255,9 @@ class GameViewModel : ViewModel() {
     
     fun resetGame() {
         cancelTimer()
+        // Reset and reinitialize colors for a new game session
+        GameColor.resetColors()
+        GameColor.initializeGameColors()
         _gameState.value = GameState(difficulty = _gameState.value.difficulty)
         startNewLevel()
     }

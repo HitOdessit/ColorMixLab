@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(./gradlew :app:compileDebugKotlin:*)"
+      "Bash(./gradlew :app:compileDebugKotlin:*)",
+      "Bash(./gradlew clean:*)",
+      "Bash(find:*)",
+      "Bash(done)"
     ],
     "deny": [],
     "ask": []

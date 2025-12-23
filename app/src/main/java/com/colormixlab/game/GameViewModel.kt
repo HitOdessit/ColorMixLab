@@ -230,12 +230,34 @@ class GameViewModel : ViewModel() {
         )
         startTimer()
     }
-    
-    fun penalizeMathMistake() {
+
+    fun getCurrentMathChallenge(): Pair<MathChallengeType, GameColor?>? {
+        if (!_gameState.value.needsMathChallenge) return null
+
+        val challengeType = _gameState.value.mathChallengeType
+
+        // Find the next color to unlock
+        val currentLevel = _gameState.value.currentLevel
+        val currentUnlockedColors = _gameState.value.unlockedColors
+        val nextLevelColors = GameColor.getAvailableColors(currentLevel)
+
+        // Find the first color that will be newly unlocked
+        val nextColorToUnlock = nextLevelColors.firstOrNull { color ->
+            !currentUnlockedColors.contains(color)
+        }
+
+        return Pair(challengeType, nextColorToUnlock)
+    }
+
+    fun deductPointsForWrongMathAnswer() {
         val newScore = (_gameState.value.currentScore - 75).coerceAtLeast(0)
         _gameState.value = _gameState.value.copy(currentScore = newScore)
     }
-    
+
+    fun exitGame() {
+        cancelTimer()
+    }
+
     private fun startNewLevel() {
         val previousTarget = if (_gameState.value.currentLevel > 1) _gameState.value.targetColor else null
         val (targetColor, recipe) = LevelManager.generateTargetColor(_gameState.value.currentLevel, previousTarget)

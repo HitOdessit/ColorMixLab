@@ -28,6 +28,7 @@ data class GameState(
     val currentScore: Int = 0,
     val hasCheckedThisRound: Boolean = false,
     val isGameCompleted: Boolean = false,
+    val completedAllLevels: Boolean = false,  // True only when level 30 is actually completed
     val difficulty: Difficulty = Difficulty.MEDIUM,
     val timeRemainingSeconds: Int? = null,
     val isTimerActive: Boolean = false,

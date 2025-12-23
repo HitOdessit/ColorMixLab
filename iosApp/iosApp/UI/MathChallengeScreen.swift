@@ -49,26 +49,26 @@ struct MathChallengeScreen: View {
                 if let question = viewModel.currentQuestion {
                     // Question Display
                     VStack(spacing: 32) {
-                        // Question
+                        // Question - 1.5x larger font for readability (reduced from 3x)
                         HStack(spacing: 16) {
                             Text("\(question.multiplier1)")
-                                .font(.system(size: 64, weight: .bold))
+                                .font(.system(size: 96, weight: .bold))
                                 .foregroundColor(.white)
 
                             Text("×")
-                                .font(.system(size: 48, weight: .light))
+                                .font(.system(size: 72, weight: .light))
                                 .foregroundColor(.white.opacity(0.7))
 
                             Text("\(question.multiplier2)")
-                                .font(.system(size: 64, weight: .bold))
+                                .font(.system(size: 96, weight: .bold))
                                 .foregroundColor(.white)
 
                             Text("=")
-                                .font(.system(size: 48, weight: .light))
+                                .font(.system(size: 72, weight: .light))
                                 .foregroundColor(.white.opacity(0.7))
 
                             Text("?")
-                                .font(.system(size: 64, weight: .bold))
+                                .font(.system(size: 96, weight: .bold))
                                 .foregroundColor(.yellow)
                         }
                         .padding(.horizontal, 20)
@@ -224,7 +224,7 @@ struct AnswerButton: View {
     var body: some View {
         Button(action: onTap) {
             Text("\(value)")
-                .font(.system(size: 28, weight: .bold))
+                .font(.system(size: 84, weight: .bold))  // 3x larger: 28 → 84
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
                 .frame(height: 80)

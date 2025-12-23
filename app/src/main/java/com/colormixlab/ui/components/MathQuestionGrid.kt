@@ -58,13 +58,13 @@ fun MathQuestionGrid(
             2.dp
         }
 
-        // Font sizes scale with available space - further reduced for better fit
+        // Font sizes: Question at 1.5x, Answers at 3x for optimal readability
         val questionFontSize = androidx.compose.ui.unit.TextUnit(
-            (availableWidth.value * 0.04f).coerceIn(18f, 42f),
+            (availableWidth.value * 0.06f).coerceIn(27f, 63f),  // 1.5x: 0.04→0.06, 18→27, 42→63
             androidx.compose.ui.unit.TextUnitType.Sp
         )
         val answerFontSize = androidx.compose.ui.unit.TextUnit(
-            (availableWidth.value * 0.028f).coerceIn(12f, 28f),  // Reduced from 0.03/14-32 to 0.028/12-28
+            (availableWidth.value * 0.084f).coerceIn(36f, 84f),  // 3x increase: 0.028→0.084, 12→36, 28→84
             androidx.compose.ui.unit.TextUnitType.Sp
         )
 

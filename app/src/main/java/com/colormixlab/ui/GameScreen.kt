@@ -73,10 +73,18 @@ fun GameScreen(
         viewModel = viewModel
     )
 
-    // Show celebration animation when game completes
-    LaunchedEffect(state.isGameCompleted) {
-        if (state.isGameCompleted && !showCelebration && !showNicknameDialog) {
+    // Show celebration animation only when ALL levels completed (level 30)
+    LaunchedEffect(state.completedAllLevels) {
+        if (state.completedAllLevels && !showCelebration && !showNicknameDialog) {
             showCelebration = true
+        }
+    }
+
+    // Show game completed dialog when game ends (either naturally or forced)
+    LaunchedEffect(state.isGameCompleted) {
+        if (state.isGameCompleted && !state.completedAllLevels && !showNicknameDialog) {
+            // Game was forced to end, skip celebration
+            showNicknameDialog = true
         }
     }
 

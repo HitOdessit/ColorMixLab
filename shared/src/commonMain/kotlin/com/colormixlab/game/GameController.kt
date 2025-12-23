@@ -81,6 +81,7 @@ class GameController(initialDifficulty: Difficulty = Difficulty.MEDIUM) {
             _gameState.value = _gameState.value.copy(
                 showSuccessDialog = false,
                 isGameCompleted = true,
+                completedAllLevels = true,  // Natural completion of level 30
                 isTimerActive = false
             )
             return
@@ -183,6 +184,7 @@ class GameController(initialDifficulty: Difficulty = Difficulty.MEDIUM) {
     fun forceFinishGame() {
         _gameState.value = _gameState.value.copy(
             isGameCompleted = true,
+            completedAllLevels = false,  // NOT a natural completion - menu forced
             isTimerActive = false
         )
     }

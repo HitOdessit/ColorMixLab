@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.colormixlab.model.GameColor
+import com.colormixlab.model.PlatformColor
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -12,37 +13,42 @@ import kotlinx.coroutines.launch
 class GameViewModel : ViewModel() {
     private val _gameState = mutableStateOf(GameState())
     val gameState: State<GameState> = _gameState
-    
+
     private var timerJob: Job? = null
-    
+
     init {
-        // Initialize game colors at the start
-        GameColor.initializeGameColors()
+        // Initialize game colors at the start with a random seed
+        val seed = System.currentTimeMillis()
+        GameColor.initializeGameColors(seed)
         startNewLevel()
     }
-    
+
     fun setDifficulty(difficulty: Difficulty) {
         _gameState.value = _gameState.value.copy(difficulty = difficulty)
     }
-    
+
     fun addColorDrop(color: GameColor) {
         val currentDrops = _gameState.value.drops.toMutableMap()
         currentDrops[color] = (currentDrops[color] ?: 0) + 1
-        
-        val newMixedColor = ColorMixer.mixColors(currentDrops)
-        val similarity = ColorMixer.calculateSimilarity(_gameState.value.targetColor, newMixedColor)
-        
+
+        // Use shared module ColorMixer
+        val newMixedPlatformColor = ColorMixer.mixColors(currentDrops)
+        val similarity = ColorMixer.calculateSimilarity(
+            _gameState.value.targetColor,
+            newMixedPlatformColor
+        )
+
         _gameState.value = _gameState.value.copy(
             drops = currentDrops,
-            mixedColor = newMixedColor,
+            mixedColor = newMixedPlatformColor,
             similarity = similarity
         )
     }
-    
+
     fun clearBowl() {
         _gameState.value = _gameState.value.copy(
             drops = emptyMap(),
-            mixedColor = androidx.compose.ui.graphics.Color.White,
+            mixedColor = PlatformColor.White,
             similarity = 0f
         )
     }
@@ -146,7 +152,7 @@ class GameViewModel : ViewModel() {
     
     fun nextLevel() {
         val currentLevel = _gameState.value.currentLevel
-        
+
         // Check if game is completed
         if (currentLevel >= GameState.MAX_LEVEL) {
             cancelTimer()
@@ -156,34 +162,35 @@ class GameViewModel : ViewModel() {
             )
             return
         }
-        
+
         val newLevel = currentLevel + 1
-        
+
         // Check if this level unlocks a new color
         val colorUnlockLevels = listOf(4, 7, 10, 13, 16, 19)
         val needsColorUnlockChallenge = newLevel in colorUnlockLevels
-        
+
         // Check if this is a milestone level (every 3 levels after 19)
         val needsMilestoneChallenge = newLevel > 19 && (newLevel - 19) % 3 == 0
-        
+
         val needsChallenge = needsColorUnlockChallenge || needsMilestoneChallenge
         val challengeType = when {
             needsColorUnlockChallenge -> MathChallengeType.COLOR_UNLOCK
             needsMilestoneChallenge -> MathChallengeType.MILESTONE
             else -> MathChallengeType.NONE
         }
-        
+
+        // Use shared LevelManager
         val previousTarget = _gameState.value.targetColor
         val (targetColor, recipe) = LevelManager.generateTargetColor(newLevel, previousTarget)
-        
+
         cancelTimer()
-        
+
         _gameState.value = _gameState.value.copy(
             currentLevel = newLevel,
             unlockedColors = if (needsChallenge) _gameState.value.unlockedColors else GameColor.getAvailableColors(newLevel),
             targetColor = targetColor,
             targetRecipe = recipe,
-            mixedColor = androidx.compose.ui.graphics.Color.White,
+            mixedColor = PlatformColor.White,
             drops = emptyMap(),
             isMatched = false,
             showSuccessDialog = false,
@@ -193,28 +200,31 @@ class GameViewModel : ViewModel() {
             mathChallengeType = challengeType,
             mathChallengeCompleted = false
         )
-        
+
         if (!needsChallenge) {
             startTimer()
         }
     }
-    
+
     fun retryLevel() {
         val previousTarget = _gameState.value.targetColor
-        val (targetColor, recipe) = LevelManager.generateTargetColor(_gameState.value.currentLevel, previousTarget)
-        
+        val (targetColor, recipe) = LevelManager.generateTargetColor(
+            _gameState.value.currentLevel,
+            previousTarget
+        )
+
         cancelTimer()
-        
+
         _gameState.value = _gameState.value.copy(
             targetColor = targetColor,
             targetRecipe = recipe,
-            mixedColor = androidx.compose.ui.graphics.Color.White,
+            mixedColor = PlatformColor.White,
             drops = emptyMap(),
             showSuccessDialog = false,
             hasCheckedThisRound = false,
             similarity = 0f
         )
-        
+
         startTimer()
     }
     
@@ -259,27 +269,35 @@ class GameViewModel : ViewModel() {
     }
 
     private fun startNewLevel() {
-        val previousTarget = if (_gameState.value.currentLevel > 1) _gameState.value.targetColor else null
-        val (targetColor, recipe) = LevelManager.generateTargetColor(_gameState.value.currentLevel, previousTarget)
-        
+        val previousTarget = if (_gameState.value.currentLevel > 1) {
+            _gameState.value.targetColor
+        } else {
+            null
+        }
+        val (targetColor, recipe) = LevelManager.generateTargetColor(
+            _gameState.value.currentLevel,
+            previousTarget
+        )
+
         _gameState.value = _gameState.value.copy(
             targetColor = targetColor,
             targetRecipe = recipe,
-            mixedColor = androidx.compose.ui.graphics.Color.White,
+            mixedColor = PlatformColor.White,
             drops = emptyMap(),
             isMatched = false,
             showSuccessDialog = false,
             similarity = 0f
         )
-        
+
         startTimer()
     }
-    
+
     fun resetGame() {
         cancelTimer()
         // Reset and reinitialize colors for a new game session
         GameColor.resetColors()
-        GameColor.initializeGameColors()
+        val seed = System.currentTimeMillis()
+        GameColor.initializeGameColors(seed)
         _gameState.value = GameState(difficulty = _gameState.value.difficulty)
         startNewLevel()
     }

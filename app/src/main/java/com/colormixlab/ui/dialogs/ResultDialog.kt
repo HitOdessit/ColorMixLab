@@ -17,6 +17,7 @@ import androidx.compose.ui.window.Dialog
 import com.colormixlab.model.GameColor
 import com.colormixlab.ui.components.ConfettiEffect
 import com.colormixlab.ui.components.SparkleEffect
+import com.colormixlab.utils.toComposeColor
 
 /**
  * Dialog shown after completing a level attempt.
@@ -233,7 +234,7 @@ private fun ColorUnlockNotification(color: GameColor) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = color.rgb.copy(alpha = 0.15f)
+            containerColor = color.toComposeColor().copy(alpha = 0.15f)
         ),
         shape = RoundedCornerShape(16.dp)
     ) {
@@ -248,7 +249,7 @@ private fun ColorUnlockNotification(color: GameColor) {
                 modifier = Modifier
                     .size(48.dp)
                     .background(
-                        color = color.rgb,
+                        color = color.toComposeColor(),
                         shape = RoundedCornerShape(12.dp)
                     )
             )
@@ -257,7 +258,7 @@ private fun ColorUnlockNotification(color: GameColor) {
             Text(
                 text = "🎨 ${color.name} Unlocked!",
                 fontSize = 20.sp,
-                color = color.rgb,
+                color = color.toComposeColor(),
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )

@@ -48,7 +48,9 @@ fun GameScreen(
     val state = viewModel.gameState.value
     val context = LocalContext.current
     val hapticManager = remember { HapticManager(context) }
-    val leaderboardManager = remember { LeaderboardManager(context) }
+    val leaderboardManager = remember {
+        LeaderboardManager(com.colormixlab.platform.PlatformStorage(context))
+    }
 
     // Dialog states
     var showMenu by remember { mutableStateOf(false) }

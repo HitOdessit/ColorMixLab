@@ -34,7 +34,9 @@ fun LeaderboardDialog(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
-    val leaderboardManager = remember { LeaderboardManager(context) }
+    val leaderboardManager = remember {
+        LeaderboardManager(com.colormixlab.platform.PlatformStorage(context))
+    }
     var selectedTab by remember { mutableStateOf(LeaderboardTab.TODAY) }
     
     // Get filtered entries based on selected tab

@@ -9,14 +9,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.colormixlab.model.PlatformColor
+import com.colormixlab.utils.toComposeColor
 
 @Composable
 fun TargetColor(
-    targetColor: Color,
+    targetColor: PlatformColor,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -36,7 +37,7 @@ fun TargetColor(
             modifier = Modifier
                 .size(75.dp)
                 .border(3.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(10.dp))
-                .background(targetColor, RoundedCornerShape(10.dp))
+                .background(targetColor.toComposeColor(), RoundedCornerShape(10.dp))
         )
     }
 }

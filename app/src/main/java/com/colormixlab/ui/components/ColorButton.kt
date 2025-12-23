@@ -19,6 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.colormixlab.model.GameColor
+import com.colormixlab.utils.toComposeColor
 
 @Composable
 fun ColorButton(
@@ -28,7 +29,7 @@ fun ColorButton(
     modifier: Modifier = Modifier
 ) {
     var isPressed by remember { mutableStateOf(false) }
-    
+
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 1.15f else 1f,  // Reduced from 1.2f
         animationSpec = spring(
@@ -40,10 +41,10 @@ fun ColorButton(
         },
         label = "buttonScale"
     )
-    
+
     // Use remember to avoid recreating interaction source
     val interactionSource = remember { MutableInteractionSource() }
-    
+
     Column(
         modifier = modifier
             .scale(scale)
@@ -61,7 +62,7 @@ fun ColorButton(
             modifier = Modifier
                 .size(60.dp)
                 .border(3.dp, MaterialTheme.colorScheme.onBackground, CircleShape)
-                .background(color.rgb, CircleShape),
+                .background(color.toComposeColor(), CircleShape),
             contentAlignment = Alignment.Center
         ) {
             // Drop count badge

@@ -20,6 +20,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.colormixlab.model.GameColor
+import com.colormixlab.model.PlatformColor
+import com.colormixlab.utils.toComposeColor
 import kotlinx.coroutines.launch
 import kotlin.math.sqrt
 
@@ -32,15 +34,15 @@ data class AnimatedSlice(
 @Composable
 fun MixingBowl(
     drops: Map<GameColor, Int>,
-    mixedColor: Color,
+    mixedColor: PlatformColor,
     modifier: Modifier = Modifier
 ) {
     val scope = rememberCoroutineScope()
     var animatedSlices by remember { mutableStateOf<List<AnimatedSlice>>(emptyList()) }
 
-    // Animate the mixed color
+    // Animate the mixed color - convert to Compose Color
     val animatedMixedColor by animateColorAsState(
-        targetValue = mixedColor,
+        targetValue = mixedColor.toComposeColor(),
         animationSpec = tween(durationMillis = 300),
         label = "mixedColor"
     )
@@ -148,7 +150,7 @@ fun MixingBowl(
                     var currentAngle = -90f // Start from top
 
                     animatedSlices.forEach { slice ->
-                        val color = slice.color.rgb
+                        val color = slice.color.toComposeColor()
                         val sweepAngle = slice.angle.value
 
                         // Draw arc as a ring segment (outer ring only)
@@ -183,7 +185,7 @@ fun MixingBowl(
             }
 
             // Show "Empty" text when no drops
-            if (isEmpty && mixedColor == Color.White) {
+            if (isEmpty && mixedColor == PlatformColor.White) {
                 Text(
                     text = "Empty",
                     fontSize = 18.sp,

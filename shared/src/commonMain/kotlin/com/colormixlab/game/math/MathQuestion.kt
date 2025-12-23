@@ -28,4 +28,3 @@ data class MathChallengeState(
     val timeRemaining: Int? = null,
     val isTimerActive: Boolean = false
 )
-

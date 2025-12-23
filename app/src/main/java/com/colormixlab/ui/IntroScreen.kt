@@ -33,7 +33,9 @@ fun IntroScreen(
     var showLeaderboard by remember { mutableStateOf(false) }
     var showCelebration by remember { mutableStateOf(false) }
     val context = LocalContext.current
-    val leaderboardManager = remember { LeaderboardManager(context) }
+    val leaderboardManager = remember {
+        LeaderboardManager(com.colormixlab.platform.PlatformStorage(context))
+    }
     
     // Check orientation
     val configuration = LocalConfiguration.current

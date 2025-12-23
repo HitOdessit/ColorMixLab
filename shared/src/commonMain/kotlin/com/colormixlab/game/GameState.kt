@@ -1,11 +1,11 @@
 package com.colormixlab.game
 
-import androidx.compose.ui.graphics.Color
 import com.colormixlab.model.GameColor
+import com.colormixlab.model.PlatformColor
 
 enum class Difficulty {
     EASY,    // No timer, 0.75x points
-    MEDIUM,  // 40s, 1.0x points  
+    MEDIUM,  // 40s, 1.0x points
     HARD     // 20s, 1.25x points
 }
 
@@ -17,9 +17,9 @@ enum class MathChallengeType {
 
 data class GameState(
     val currentLevel: Int = 1,
-    val targetColor: Color = Color.White,
+    val targetColor: PlatformColor = PlatformColor.White,
     val targetRecipe: Map<GameColor, Int> = emptyMap(),
-    val mixedColor: Color = Color.White,
+    val mixedColor: PlatformColor = PlatformColor.White,
     val drops: Map<GameColor, Int> = emptyMap(),
     val unlockedColors: List<GameColor> = GameColor.getAvailableColors(1),
     val isMatched: Boolean = false,
@@ -39,12 +39,12 @@ data class GameState(
     val mathChallengeCompleted: Boolean = false
 ) {
     fun getDropCount(color: GameColor): Int = drops[color] ?: 0
-    
+
     fun getTotalDrops(): Int = drops.values.sum()
-    
+
     companion object {
         const val MAX_LEVEL = 30
-        
+
         fun getTimerDuration(difficulty: Difficulty): Int? {
             return when (difficulty) {
                 Difficulty.EASY -> null  // No timer
@@ -54,4 +54,3 @@ data class GameState(
         }
     }
 }
-

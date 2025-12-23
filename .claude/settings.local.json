@@ -4,7 +4,13 @@
       "Bash(./gradlew :app:compileDebugKotlin:*)",
       "Bash(./gradlew clean:*)",
       "Bash(find:*)",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(tree:*)",
+      "Bash(./gradlew :shared:compileKotlinAndroid:*)",
+      "Bash(curl:*)",
+      "Bash(unzip:*)",
+      "Bash(./gradlew:*)",
+      "Bash(paste:*)"
     ],
     "deny": [],
     "ask": []

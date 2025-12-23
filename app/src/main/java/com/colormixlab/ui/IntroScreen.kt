@@ -2,6 +2,7 @@ package com.colormixlab.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -11,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -20,6 +22,8 @@ import androidx.compose.ui.unit.sp
 import com.colormixlab.BuildConfig
 import com.colormixlab.data.LeaderboardManager
 import com.colormixlab.game.Difficulty
+import com.colormixlab.ui.components.GameCompletionCelebration
+import kotlinx.coroutines.delay
 
 @Composable
 fun IntroScreen(
@@ -27,6 +31,7 @@ fun IntroScreen(
 ) {
     var selectedDifficulty by remember { mutableStateOf(Difficulty.MEDIUM) }
     var showLeaderboard by remember { mutableStateOf(false) }
+    var showCelebration by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val leaderboardManager = remember { LeaderboardManager(context) }
     
@@ -34,20 +39,32 @@ fun IntroScreen(
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
     
-    if (isLandscape) {
-        IntroScreenLandscape(
-            selectedDifficulty = selectedDifficulty,
-            onDifficultySelected = { selectedDifficulty = it },
-            onStartGame = onStartGame,
-            onShowLeaderboard = { showLeaderboard = true }
+    // Show celebration animation as overlay
+    if (showCelebration) {
+        GameCompletionCelebration(
+            onAnimationComplete = {
+                showCelebration = false
+            }
         )
     } else {
-        IntroScreenPortrait(
-            selectedDifficulty = selectedDifficulty,
-            onDifficultySelected = { selectedDifficulty = it },
-            onStartGame = onStartGame,
-            onShowLeaderboard = { showLeaderboard = true }
-        )
+        // Normal intro screen
+        if (isLandscape) {
+            IntroScreenLandscape(
+                selectedDifficulty = selectedDifficulty,
+                onDifficultySelected = { selectedDifficulty = it },
+                onStartGame = onStartGame,
+                onShowLeaderboard = { showLeaderboard = true },
+                onVersionDoubleClick = { showCelebration = true }
+            )
+        } else {
+            IntroScreenPortrait(
+                selectedDifficulty = selectedDifficulty,
+                onDifficultySelected = { selectedDifficulty = it },
+                onStartGame = onStartGame,
+                onShowLeaderboard = { showLeaderboard = true },
+                onVersionDoubleClick = { showCelebration = true }
+            )
+        }
     }
     
     // Leaderboard Dialog
@@ -64,8 +81,12 @@ fun IntroScreenPortrait(
     selectedDifficulty: Difficulty,
     onDifficultySelected: (Difficulty) -> Unit,
     onStartGame: (Difficulty) -> Unit,
-    onShowLeaderboard: () -> Unit
+    onShowLeaderboard: () -> Unit,
+    onVersionDoubleClick: () -> Unit
 ) {
+    // Double-click tracking for version
+    var lastClickTime by remember { mutableStateOf(0L) }
+    
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -89,13 +110,25 @@ fun IntroScreenPortrait(
                 textAlign = TextAlign.Center
             )
 
-            // Version
+            // Version - with double click detection
             Text(
                 text = "v${BuildConfig.VERSION_NAME}",
                 fontSize = 13.sp,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
                 textAlign = TextAlign.Center,
-                modifier = Modifier.offset(y = (-8).dp)
+                modifier = Modifier
+                    .offset(y = (-8).dp)
+                    .pointerInput(Unit) {
+                        detectTapGestures(
+                            onTap = {
+                                val currentTime = System.currentTimeMillis()
+                                if (currentTime - lastClickTime < 500) { // Double click threshold
+                                    onVersionDoubleClick()
+                                }
+                                lastClickTime = currentTime
+                            }
+                        )
+                    }
             )
 
             Spacer(modifier = Modifier.height(0.dp))
@@ -223,8 +256,12 @@ fun IntroScreenLandscape(
     selectedDifficulty: Difficulty,
     onDifficultySelected: (Difficulty) -> Unit,
     onStartGame: (Difficulty) -> Unit,
-    onShowLeaderboard: () -> Unit
+    onShowLeaderboard: () -> Unit,
+    onVersionDoubleClick: () -> Unit
 ) {
+    // Double-click tracking for version
+    var lastClickTime by remember { mutableStateOf(0L) }
+    
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -253,7 +290,18 @@ fun IntroScreenLandscape(
                     text = "v${BuildConfig.VERSION_NAME}  •  Match colors • 30 levels • Beat the timer",
                     fontSize = 14.sp,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.pointerInput(Unit) {
+                        detectTapGestures(
+                            onTap = {
+                                val currentTime = System.currentTimeMillis()
+                                if (currentTime - lastClickTime < 500) { // Double click threshold
+                                    onVersionDoubleClick()
+                                }
+                                lastClickTime = currentTime
+                            }
+                        )
+                    }
                 )
             }
             

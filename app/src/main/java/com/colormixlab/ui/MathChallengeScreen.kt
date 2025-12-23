@@ -10,14 +10,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.colormixlab.game.Difficulty
 import com.colormixlab.game.math.MathChallengeState
 import com.colormixlab.game.math.MathQuestionGenerator
 import com.colormixlab.ui.components.ConfettiEffect
-import com.colormixlab.ui.components.MathQuestionGrid
+import com.colormixlab.ui.components.MathChallengeLayout
 import com.colormixlab.utils.HapticManager
 import com.colormixlab.utils.MathChallengeTimer
 import kotlinx.coroutines.delay
@@ -100,81 +98,42 @@ fun MathChallengeScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(16.dp)
+            .padding(8.dp)
     ) {
         // Back button
         ChallengeBackButton(onClick = onBack)
 
-        // Challenge content
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .align(Alignment.Center),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Top
-        ) {
-            Spacer(modifier = Modifier.height(56.dp))
-
-            // Header
-            ChallengeHeader(
-                correctCount = challengeState.consecutiveCorrect,
-                requiredCount = 5
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Progress card
-            ChallengeProgressCard(
-                correctCount = challengeState.consecutiveCorrect,
-                requiredCount = 5,
-                timeRemaining = challengeState.timeRemaining
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Question and answers
-            challengeState.currentQuestion?.let { question ->
-                MathQuestionGrid(
-                    question = question,
-                    selectedAnswer = challengeState.selectedAnswer,
-                    showingAnswer = challengeState.showingAnswer,
-                    onAnswerClick = { answer ->
-                        handleChallengeAnswerClick(
-                            answer = answer,
-                            correctAnswer = question.correctAnswer,
-                            challengeState = challengeState,
-                            hapticManager = hapticManager,
-                            onStateUpdate = { newState -> challengeState = newState }
-                        )
-                    }
+        // Unified math challenge layout
+        MathChallengeLayout(
+            challengeState = challengeState,
+            difficulty = difficulty,
+            requiredCount = 5,
+            onAnswerClick = { answer ->
+                handleChallengeAnswerClick(
+                    answer = answer,
+                    correctAnswer = challengeState.currentQuestion?.correctAnswer ?: 0,
+                    challengeState = challengeState,
+                    hapticManager = hapticManager,
+                    onStateUpdate = { newState -> challengeState = newState }
                 )
-            }
-
-            // OK button for Easy mode
-            if (difficulty == Difficulty.EASY && challengeState.showingAnswer) {
-                Spacer(modifier = Modifier.height(16.dp))
-
-                EasyChallengeButton(
-                    onContinue = {
-                        if (challengeState.consecutiveCorrect >= 5) {
-                            showConfetti = true
-                            scope.launch {
-                                delay(2000)
-                                onChallengeComplete()
-                            }
-                        } else {
-                            challengeState = challengeState.copy(
-                                currentQuestion = MathQuestionGenerator.generateQuestion(difficulty, 1),
-                                showingAnswer = false,
-                                selectedAnswer = null
-                            )
-                        }
+            },
+            onEasyContinue = {
+                if (challengeState.consecutiveCorrect >= 5) {
+                    showConfetti = true
+                    scope.launch {
+                        delay(2000)
+                        onChallengeComplete()
                     }
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-        }
+                } else {
+                    challengeState = challengeState.copy(
+                        currentQuestion = MathQuestionGenerator.generateQuestion(difficulty, 1),
+                        showingAnswer = false,
+                        selectedAnswer = null
+                    )
+                }
+            },
+            modifier = Modifier.padding(top = 48.dp)
+        )
 
         // Confetti celebration
         if (showConfetti) {
@@ -304,127 +263,3 @@ private fun BoxScope.ChallengeBackButton(onClick: () -> Unit) {
     }
 }
 
-/**
- * Challenge header with title and instructions.
- */
-@Composable
-private fun ChallengeHeader(
-    correctCount: Int,
-    requiredCount: Int
-) {
-    Text(
-        text = "🧮 Math Challenge!",
-        fontSize = 28.sp,
-        fontWeight = FontWeight.Bold,
-        color = MaterialTheme.colorScheme.primary
-    )
-
-    Spacer(modifier = Modifier.height(4.dp))
-
-    Text(
-        text = "Answer $requiredCount questions correctly to start!",
-        fontSize = 16.sp,
-        color = MaterialTheme.colorScheme.onBackground
-    )
-}
-
-/**
- * Progress card showing correct count and timer.
- */
-@Composable
-private fun ChallengeProgressCard(
-    correctCount: Int,
-    requiredCount: Int,
-    timeRemaining: Int?
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "Correct: $correctCount/$requiredCount",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
-            )
-
-            Spacer(modifier = Modifier.height(6.dp))
-
-            LinearProgressIndicator(
-                progress = correctCount.toFloat() / requiredCount,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(10.dp),
-                color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.surfaceVariant
-            )
-
-            // Timer display (if applicable)
-            timeRemaining?.let { time ->
-                Spacer(modifier = Modifier.height(8.dp))
-                ChallengeTimerDisplay(time)
-            }
-        }
-    }
-}
-
-/**
- * Inline timer display for challenge screen.
- */
-@Composable
-private fun ChallengeTimerDisplay(timeRemaining: Int) {
-    val timerColor = when {
-        timeRemaining <= MathChallengeTimer.getWarningThreshold() -> androidx.compose.ui.graphics.Color.Red
-        timeRemaining <= MathChallengeTimer.getCriticalThreshold() -> androidx.compose.ui.graphics.Color(0xFFFF9800)
-        else -> MaterialTheme.colorScheme.primary
-    }
-
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center
-    ) {
-        Text(text = "⏱", fontSize = 16.sp)
-        Spacer(modifier = Modifier.width(4.dp))
-        Text(
-            text = "$timeRemaining",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            color = timerColor
-        )
-        Text(
-            text = "s",
-            fontSize = 12.sp,
-            color = timerColor.copy(alpha = 0.7f)
-        )
-    }
-}
-
-/**
- * OK button for Easy mode.
- */
-@Composable
-private fun EasyChallengeButton(onContinue: () -> Unit) {
-    Button(
-        onClick = onContinue,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(52.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.primary
-        )
-    ) {
-        Text(
-            text = "OK",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold
-        )
-    }
-}

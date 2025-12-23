@@ -18,6 +18,7 @@ import com.colormixlab.model.LeaderboardEntry
 import com.colormixlab.ui.components.LandscapeGameLayout
 import com.colormixlab.ui.components.MathChallengeDialog
 import com.colormixlab.ui.components.PortraitGameLayout
+import com.colormixlab.ui.components.GameCompletionCelebration
 import com.colormixlab.ui.dialogs.MenuDialog
 import com.colormixlab.ui.dialogs.NicknameDialog
 import com.colormixlab.ui.dialogs.ResultDialog
@@ -51,6 +52,7 @@ fun GameScreen(
 
     // Dialog states
     var showMenu by remember { mutableStateOf(false) }
+    var showCelebration by remember { mutableStateOf(false) }
     var showNicknameDialog by remember { mutableStateOf(false) }
     var showFinalLeaderboard by remember { mutableStateOf(false) }
 
@@ -69,10 +71,10 @@ fun GameScreen(
         viewModel = viewModel
     )
 
-    // Show nickname dialog when game completes
+    // Show celebration animation when game completes
     LaunchedEffect(state.isGameCompleted) {
-        if (state.isGameCompleted) {
-            showNicknameDialog = true
+        if (state.isGameCompleted && !showCelebration && !showNicknameDialog) {
+            showCelebration = true
         }
     }
 
@@ -114,6 +116,16 @@ fun GameScreen(
         onNavigateToIntro = onNavigateToIntro,
         onShowFinalLeaderboard = { showFinalLeaderboard = true }
     )
+
+    // Celebration animation on game completion
+    if (showCelebration) {
+        GameCompletionCelebration(
+            onAnimationComplete = {
+                showCelebration = false
+                showNicknameDialog = true
+            }
+        )
+    }
 }
 
 /**

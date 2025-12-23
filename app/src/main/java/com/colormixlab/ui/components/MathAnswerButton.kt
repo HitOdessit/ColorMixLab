@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
@@ -22,11 +23,13 @@ import kotlinx.coroutines.delay
 /**
  * Answer button component for math challenge dialogs.
  * Displays an answer option with animations for correct/incorrect feedback.
+ * Size and text scale automatically based on container size.
  *
  * @param answer The numeric answer to display
  * @param isCorrect Whether this is the correct answer
  * @param isSelected Whether this answer has been selected
  * @param showingAnswer Whether to show answer feedback
+ * @param fontSize Font size for the answer text
  * @param modifier Modifier for customization
  * @param onClick Callback when button is clicked
  */
@@ -36,6 +39,7 @@ fun MathAnswerButton(
     isCorrect: Boolean,
     isSelected: Boolean,
     showingAnswer: Boolean,
+    fontSize: TextUnit,
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
@@ -57,7 +61,7 @@ fun MathAnswerButton(
     // Scale animation for selected state
     val scale by animateFloatAsState(
         targetValue = when {
-            isSelected && showingAnswer -> if (isCorrect) 1.15f else 0.95f
+            isSelected && showingAnswer -> if (isCorrect) 1.12f else 0.95f
             isSelected -> 0.95f
             else -> 1f
         },
@@ -88,11 +92,11 @@ fun MathAnswerButton(
         else -> MaterialTheme.colorScheme.outline
     }
 
-    val borderWidth = if (showingAnswer && isCorrect) 4.dp else 2.dp
+    val borderWidth = if (showingAnswer && isCorrect) 3.dp else 2.dp
+    val cornerRadius = (fontSize.value * 0.2f).dp.coerceIn(4.dp, 12.dp)
 
     Box(
         modifier = modifier
-            .aspectRatio(1f)
             .scale(scale)
             .offset(x = offsetX.value.dp),
         contentAlignment = Alignment.Center
@@ -102,10 +106,10 @@ fun MathAnswerButton(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .scale(1.15f + pulse * 0.15f)
+                    .scale(1.12f + pulse * 0.12f)
                     .background(
-                        color = Color(0xFF4CAF50).copy(alpha = 0.25f * pulse),
-                        shape = RoundedCornerShape(12.dp)
+                        color = Color(0xFF4CAF50).copy(alpha = 0.2f * pulse),
+                        shape = RoundedCornerShape(cornerRadius)
                     )
             )
         }
@@ -115,10 +119,10 @@ fun MathAnswerButton(
             onClick = onClick,
             modifier = Modifier.fillMaxSize(),
             colors = ButtonDefaults.buttonColors(containerColor = backgroundColor),
-            shape = RoundedCornerShape(8.dp),
+            shape = RoundedCornerShape(cornerRadius),
             border = BorderStroke(borderWidth, borderColor),
             enabled = !showingAnswer,
-            contentPadding = PaddingValues(4.dp)
+            contentPadding = PaddingValues(2.dp)
         ) {
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -127,7 +131,7 @@ fun MathAnswerButton(
                 // Answer number
                 Text(
                     text = answer.toString(),
-                    fontSize = 20.sp,
+                    fontSize = fontSize,
                     fontWeight = FontWeight.Bold,
                     color = if (showingAnswer && (isCorrect || (isSelected && !isCorrect))) {
                         Color.White
@@ -138,10 +142,11 @@ fun MathAnswerButton(
 
                 // Feedback icons
                 if (showingAnswer) {
+                    val iconSize = (fontSize.value * 0.4f).dp.coerceIn(10.dp, 24.dp)
                     when {
-                        isSelected && isCorrect -> FeedbackIcon(Icons.Filled.Check, "Correct")
-                        isSelected && !isCorrect -> FeedbackIcon(Icons.Filled.Close, "Wrong")
-                        isCorrect && !isSelected -> FeedbackIcon(Icons.Filled.Check, "Correct Answer")
+                        isSelected && isCorrect -> FeedbackIcon(Icons.Filled.Check, "Correct", iconSize)
+                        isSelected && !isCorrect -> FeedbackIcon(Icons.Filled.Close, "Wrong", iconSize)
+                        isCorrect && !isSelected -> FeedbackIcon(Icons.Filled.Check, "Correct Answer", iconSize)
                     }
                 }
             }
@@ -155,7 +160,8 @@ fun MathAnswerButton(
 @Composable
 private fun BoxScope.FeedbackIcon(
     imageVector: androidx.compose.ui.graphics.vector.ImageVector,
-    contentDescription: String
+    contentDescription: String,
+    iconSize: androidx.compose.ui.unit.Dp
 ) {
     Icon(
         imageVector = imageVector,
@@ -164,6 +170,6 @@ private fun BoxScope.FeedbackIcon(
         modifier = Modifier
             .align(Alignment.TopEnd)
             .padding(2.dp)
-            .size(16.dp)
+            .size(iconSize)
     )
 }

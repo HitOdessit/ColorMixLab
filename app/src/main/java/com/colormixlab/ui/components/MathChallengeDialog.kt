@@ -8,6 +8,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -103,75 +104,65 @@ fun MathChallengeDialog(
     )
 
     // Main dialog
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+    
+    // Debug: Log orientation
+    LaunchedEffect(isLandscape) {
+        android.util.Log.d("MathChallenge", "Orientation: ${if (isLandscape) "LANDSCAPE" else "PORTRAIT"}")
+    }
+    
     Dialog(
         onDismissRequest = { /* Prevent dismissal */ },
         properties = DialogProperties(
             dismissOnBackPress = false,
-            dismissOnClickOutside = false
+            dismissOnClickOutside = false,
+            usePlatformDefaultWidth = false
         )
     ) {
         Card(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            shape = RoundedCornerShape(16.dp),
+                .fillMaxWidth(if (isLandscape) 0.98f else 1f)
+                .then(
+                    if (isLandscape) Modifier.fillMaxHeight(0.95f)
+                    else Modifier.wrapContentHeight()
+                )
+                .padding(if (isLandscape) 4.dp else 16.dp),
+            shape = RoundedCornerShape(if (isLandscape) 12.dp else 16.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surface
             )
         ) {
             Box {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(20.dp)
-                ) {
-                    // Header with progress and timer
-                    MathChallengeHeader(
-                        challengeType = challengeType,
-                        nextColorToUnlock = nextColorToUnlock,
-                        correctCount = challengeState.consecutiveCorrect,
-                        requiredCount = 3,
-                        timeRemaining = challengeState.timeRemaining
-                    )
-
-                    // Question and answer grid
-                    challengeState.currentQuestion?.let { question ->
-                        MathQuestionGrid(
-                            question = question,
-                            selectedAnswer = challengeState.selectedAnswer,
-                            showingAnswer = challengeState.showingAnswer,
-                            onAnswerClick = { answer ->
-                                handleAnswerClick(
-                                    answer = answer,
-                                    correctAnswer = question.correctAnswer,
-                                    challengeState = challengeState,
-                                    hapticManager = hapticManager,
-                                    onWrongAnswer = onWrongAnswer,
-                                    onStateUpdate = { newState -> challengeState = newState }
-                                )
-                            }
+                // Unified math challenge layout
+                MathChallengeLayout(
+                    challengeState = challengeState,
+                    difficulty = difficulty,
+                    requiredCount = 3,
+                    challengeType = challengeType,
+                    nextColorToUnlock = nextColorToUnlock,
+                    onAnswerClick = { answer ->
+                        handleAnswerClick(
+                            answer = answer,
+                            correctAnswer = challengeState.currentQuestion?.correctAnswer ?: 0,
+                            challengeState = challengeState,
+                            hapticManager = hapticManager,
+                            onWrongAnswer = onWrongAnswer,
+                            onStateUpdate = { newState -> challengeState = newState }
                         )
+                    },
+                    onEasyContinue = {
+                        if (challengeState.consecutiveCorrect >= 3) {
+                            onDismiss()
+                        } else {
+                            challengeState = challengeState.copy(
+                                currentQuestion = MathQuestionGenerator.generateQuestion(difficulty, level),
+                                showingAnswer = false,
+                                selectedAnswer = null
+                            )
+                        }
                     }
-
-                    // OK button for Easy mode
-                    if (difficulty == Difficulty.EASY && challengeState.showingAnswer) {
-                        EasyModeOkButton(
-                            onContinue = {
-                                if (challengeState.consecutiveCorrect >= 3) {
-                                    onDismiss()
-                                } else {
-                                    challengeState = challengeState.copy(
-                                        currentQuestion = MathQuestionGenerator.generateQuestion(difficulty, level),
-                                        showingAnswer = false,
-                                        selectedAnswer = null
-                                    )
-                                }
-                            }
-                        )
-                    }
-                }
+                )
 
                 // Exit button
                 ExitButton(onClick = { showExitConfirmation = true })
@@ -288,28 +279,6 @@ private fun handleAnswerClick(
             }
         )
     )
-}
-
-/**
- * OK button for Easy mode.
- */
-@Composable
-private fun EasyModeOkButton(onContinue: () -> Unit) {
-    Button(
-        onClick = onContinue,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(48.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.primary
-        )
-    ) {
-        Text(
-            text = "OK",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold
-        )
-    }
 }
 
 /**

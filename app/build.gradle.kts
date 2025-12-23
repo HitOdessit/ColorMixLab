@@ -11,7 +11,7 @@ android {
         applicationId = "com.colormixlab"
         minSdk = 24
         targetSdk = 34
-        versionCode = 18  // Auto-increment this with each commit
+        versionCode = 19  // Auto-increment this with each commit
         versionName = "1.${versionCode}"  // Major.Minor format
 
         vectorDrawables {

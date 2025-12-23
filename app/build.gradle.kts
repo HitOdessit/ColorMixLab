@@ -11,7 +11,7 @@ android {
         applicationId = "com.colormixlab"
         minSdk = 24
         targetSdk = 34
-        versionCode = 17  // Auto-increment this with each commit
+        versionCode = 18  // Auto-increment this with each commit
         versionName = "1.${versionCode}"  // Major.Minor format
 
         vectorDrawables {
@@ -67,11 +67,18 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.activity:activity-compose:1.8.2")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
-    
+
     // Core
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
-    
+
+    // Testing
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.jetbrains.kotlin:kotlin-test:1.9.20")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    testImplementation("io.mockk:mockk:1.13.8")
+    testImplementation("androidx.arch.core:core-testing:2.2.0")
+
     // Debug
     debugImplementation("androidx.compose.ui:ui-tooling")
 }

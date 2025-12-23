@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1024" height="1024" viewBox="0 0 108 108" xmlns="http://www.w3.org/2000/svg">
+    <!-- Background -->
+    <rect width="108" height="108" fill="#FFFFFF"/>
+    
+    <!-- Red circle (top-left) -->
+    <circle cx="30" cy="30" r="12" fill="#E74C3C"/>
+    
+    <!-- Blue circle (top-right) -->
+    <circle cx="78" cy="30" r="12" fill="#3498DB"/>
+    
+    <!-- Yellow circle (bottom-left) -->
+    <circle cx="30" cy="78" r="12" fill="#F1C40F"/>
+    
+    <!-- Purple mixing bowl (center) -->
+    <circle cx="54" cy="44" r="18" fill="#9B59B6"/>
+    
+    <!-- Bowl outline -->
+    <circle cx="54" cy="44" r="18" fill="none" stroke="#2C3E50" stroke-width="3"/>
+</svg>
+

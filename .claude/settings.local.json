@@ -10,7 +10,8 @@
       "Bash(curl:*)",
       "Bash(unzip:*)",
       "Bash(./gradlew:*)",
-      "Bash(paste:*)"
+      "Bash(paste:*)",
+      "Bash(xcodebuild:*)"
     ],
     "deny": [],
     "ask": []

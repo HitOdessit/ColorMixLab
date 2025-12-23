@@ -21,13 +21,16 @@ kotlin {
         target.binaries.framework {
             baseName = "shared"
             isStatic = true
+
+            // Export all necessary classes to iOS
+            export("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
         }
     }
 
     sourceSets {
         val commonMain by getting {
             dependencies {
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+                api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
                 implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.5.0")
             }

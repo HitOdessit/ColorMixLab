@@ -292,10 +292,29 @@ Haptics should work out of the box on physical devices. On simulator:
 
 ### App Icons
 
-1. Open `Assets.xcassets`
+✅ **App icon is already configured!** The iOS app icon matches the Android app icon design.
+
+**Icon Design:**
+- Red, Blue, Yellow circles representing primary colors
+- Purple mixing bowl in the center
+- Clean white background
+
+**Location:** `Assets.xcassets/AppIcon.appiconset/app-icon-1024.png`
+
+**To view:**
+1. Open `Assets.xcassets` in Xcode
 2. Select `AppIcon`
-3. Drag and drop icon images for each size
-4. Recommended sizes: 1024×1024 for App Store
+3. You'll see the colored circles icon (1024×1024)
+
+**To regenerate (if needed):**
+```bash
+python3 generate_ios_icon_pure.py
+```
+
+**Documentation:**
+- Full guide: `IOS_APP_ICON_SETUP.md`
+- Quick reference: `IOS_APP_ICON_QUICK_REF.md`
+- Android-iOS comparison: `APP_ICON_COMPARISON.md`
 
 ## Next Steps
 

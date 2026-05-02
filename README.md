@@ -108,7 +108,7 @@ Each game session randomly selects one color from each tier, so the palette vari
 ### Scoring
 
 - Base points scale with color similarity (80-100% match required)
-- Difficulty multiplier: Easy x1, Medium x2, Hard x3
+- Difficulty multiplier: Easy x0.75, Medium x1.0, Hard x1.25
 - Time bonus on Medium/Hard for quick matches
 
 ## Building

@@ -164,6 +164,3 @@ fun SparkleEffect(
         }
     }
 }
-
-
-

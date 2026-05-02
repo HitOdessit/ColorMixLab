@@ -23,7 +23,6 @@ import com.colormixlab.BuildConfig
 import com.colormixlab.data.LeaderboardManager
 import com.colormixlab.game.Difficulty
 import com.colormixlab.ui.components.GameCompletionCelebration
-import kotlinx.coroutines.delay
 
 @Composable
 fun IntroScreen(

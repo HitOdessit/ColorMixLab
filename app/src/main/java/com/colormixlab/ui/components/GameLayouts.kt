@@ -21,12 +21,7 @@ import androidx.compose.ui.unit.sp
 import com.colormixlab.game.Difficulty
 import com.colormixlab.game.GameState
 import com.colormixlab.game.GameViewModel
-import com.colormixlab.ui.components.ColorButton
-import com.colormixlab.ui.components.MixingBowl
-import com.colormixlab.ui.components.LevelDisplay
-import com.colormixlab.ui.components.TargetColor
 import com.colormixlab.utils.HapticManager
-import kotlinx.coroutines.delay
 
 /**
  * Timer display component for game screen.

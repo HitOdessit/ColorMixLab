@@ -5,13 +5,9 @@ import com.colormixlab.model.PlatformColor
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.datetime.Clock
 
-/**
- * Shared game controller - ALL game logic lives here!
- * Both Android and iOS use this same class.
- * Platform-specific ViewModels are just thin wrappers for UI observation.
- */
 class GameController(initialDifficulty: Difficulty = Difficulty.MEDIUM) {
     private val _gameState = MutableStateFlow(GameState(difficulty = initialDifficulty))
     val gameState: StateFlow<GameState> = _gameState.asStateFlow()
@@ -25,140 +21,142 @@ class GameController(initialDifficulty: Difficulty = Difficulty.MEDIUM) {
     // ========== GAME ACTIONS ==========
 
     fun setDifficulty(difficulty: Difficulty) {
-        _gameState.value = _gameState.value.copy(difficulty = difficulty)
+        _gameState.update { it.copy(difficulty = difficulty) }
     }
 
     fun addColorDrop(color: GameColor) {
-        val currentDrops = _gameState.value.drops.toMutableMap()
-        currentDrops[color] = (currentDrops[color] ?: 0) + 1
+        _gameState.update { state ->
+            val currentDrops = state.drops.toMutableMap()
+            currentDrops[color] = (currentDrops[color] ?: 0) + 1
 
-        val newMixedColor = ColorMixer.mixColors(currentDrops)
-        val similarity = ColorMixer.calculateSimilarity(
-            _gameState.value.targetColor,
-            newMixedColor
-        )
+            val newMixedColor = ColorMixer.mixColors(currentDrops)
+            val similarity = ColorMixer.calculateSimilarity(state.targetColor, newMixedColor)
 
-        _gameState.value = _gameState.value.copy(
-            drops = currentDrops,
-            mixedColor = newMixedColor,
-            similarity = similarity
-        )
+            state.copy(
+                drops = currentDrops,
+                mixedColor = newMixedColor,
+                similarity = similarity
+            )
+        }
     }
 
     fun clearBowl() {
-        _gameState.value = _gameState.value.copy(
+        _gameState.update { it.copy(
             drops = emptyMap(),
             mixedColor = PlatformColor.White,
             similarity = 0f
-        )
+        ) }
     }
 
     fun checkMatch() {
-        if (_gameState.value.hasCheckedThisRound) return
+        _gameState.update { state ->
+            if (state.hasCheckedThisRound) return@update state
 
-        val similarity = _gameState.value.similarity
-        val points = calculatePoints(similarity)
-        val timeBonus = calculateTimeBonus(similarity)
-        val totalPoints = points + timeBonus
-        val newScore = (_gameState.value.currentScore + totalPoints).coerceAtLeast(0)
+            val similarity = state.similarity
+            val points = calculatePointsInternal(similarity, state.difficulty)
+            val timeBonus = calculateTimeBonusInternal(similarity, state.timeRemainingSeconds, state.difficulty)
+            val totalPoints = points + timeBonus
+            val newScore = (state.currentScore + totalPoints).coerceAtLeast(0)
+            val isSuccess = similarity >= 0.80f
 
-        val isSuccess = similarity >= 0.80f
-
-        _gameState.value = _gameState.value.copy(
-            isMatched = isSuccess,
-            showSuccessDialog = true,
-            hasCheckedThisRound = true,
-            currentScore = newScore,
-            lastBasePoints = points,
-            lastTimeBonus = timeBonus
-        )
+            state.copy(
+                isMatched = isSuccess,
+                showSuccessDialog = true,
+                hasCheckedThisRound = true,
+                currentScore = newScore,
+                lastBasePoints = points,
+                lastTimeBonus = timeBonus
+            )
+        }
     }
 
     fun nextLevel() {
-        val currentLevel = _gameState.value.currentLevel
+        _gameState.update { state ->
+            val currentLevel = state.currentLevel
 
-        if (currentLevel >= GameState.MAX_LEVEL) {
-            _gameState.value = _gameState.value.copy(
+            if (currentLevel >= GameState.MAX_LEVEL) {
+                return@update state.copy(
+                    showSuccessDialog = false,
+                    isGameCompleted = true,
+                    completedAllLevels = true,
+                    isTimerActive = false
+                )
+            }
+
+            val newLevel = currentLevel + 1
+
+            val colorUnlockLevels = listOf(4, 7, 10, 13, 16, 19)
+            val needsColorUnlock = newLevel in colorUnlockLevels
+            val needsMilestone = newLevel > 19 && (newLevel - 19) % 3 == 0
+
+            val needsChallenge = needsColorUnlock || needsMilestone
+            val challengeType = when {
+                needsColorUnlock -> MathChallengeType.COLOR_UNLOCK
+                needsMilestone -> MathChallengeType.MILESTONE
+                else -> MathChallengeType.NONE
+            }
+
+            val previousTarget = state.targetColor
+            val (targetColor, recipe) = LevelManager.generateTargetColor(newLevel, previousTarget)
+
+            state.copy(
+                currentLevel = newLevel,
+                unlockedColors = if (needsChallenge) state.unlockedColors else GameColor.getAvailableColors(newLevel),
+                targetColor = targetColor,
+                targetRecipe = recipe,
+                mixedColor = PlatformColor.White,
+                drops = emptyMap(),
+                isMatched = false,
                 showSuccessDialog = false,
-                isGameCompleted = true,
-                completedAllLevels = true,  // Natural completion of level 30
-                isTimerActive = false
+                hasCheckedThisRound = false,
+                similarity = 0f,
+                needsMathChallenge = needsChallenge,
+                mathChallengeType = challengeType,
+                mathChallengeCompleted = false,
+                isTimerActive = !needsChallenge,
+                timeRemainingSeconds = if (!needsChallenge) GameState.getTimerDuration(state.difficulty) else null
             )
-            return
         }
-
-        val newLevel = currentLevel + 1
-
-        // Check for math challenges
-        val colorUnlockLevels = listOf(4, 7, 10, 13, 16, 19)
-        val needsColorUnlock = newLevel in colorUnlockLevels
-        val needsMilestone = newLevel > 19 && (newLevel - 19) % 3 == 0
-
-        val needsChallenge = needsColorUnlock || needsMilestone
-        val challengeType = when {
-            needsColorUnlock -> MathChallengeType.COLOR_UNLOCK
-            needsMilestone -> MathChallengeType.MILESTONE
-            else -> MathChallengeType.NONE
-        }
-
-        val previousTarget = _gameState.value.targetColor
-        val (targetColor, recipe) = LevelManager.generateTargetColor(newLevel, previousTarget)
-
-        _gameState.value = _gameState.value.copy(
-            currentLevel = newLevel,
-            unlockedColors = if (needsChallenge) _gameState.value.unlockedColors else GameColor.getAvailableColors(newLevel),
-            targetColor = targetColor,
-            targetRecipe = recipe,
-            mixedColor = PlatformColor.White,
-            drops = emptyMap(),
-            isMatched = false,
-            showSuccessDialog = false,
-            hasCheckedThisRound = false,
-            similarity = 0f,
-            needsMathChallenge = needsChallenge,
-            mathChallengeType = challengeType,
-            mathChallengeCompleted = false,
-            isTimerActive = !needsChallenge,
-            timeRemainingSeconds = if (!needsChallenge) GameState.getTimerDuration(_gameState.value.difficulty) else null
-        )
     }
 
     fun retryLevel() {
-        val previousTarget = _gameState.value.targetColor
-        val (targetColor, recipe) = LevelManager.generateTargetColor(
-            _gameState.value.currentLevel,
-            previousTarget
-        )
+        _gameState.update { state ->
+            val previousTarget = state.targetColor
+            val (targetColor, recipe) = LevelManager.generateTargetColor(state.currentLevel, previousTarget)
 
-        _gameState.value = _gameState.value.copy(
-            targetColor = targetColor,
-            targetRecipe = recipe,
-            mixedColor = PlatformColor.White,
-            drops = emptyMap(),
-            showSuccessDialog = false,
-            hasCheckedThisRound = false,
-            similarity = 0f,
-            isTimerActive = true,
-            timeRemainingSeconds = GameState.getTimerDuration(_gameState.value.difficulty)
-        )
+            state.copy(
+                targetColor = targetColor,
+                targetRecipe = recipe,
+                mixedColor = PlatformColor.White,
+                drops = emptyMap(),
+                showSuccessDialog = false,
+                hasCheckedThisRound = false,
+                similarity = 0f,
+                isTimerActive = true,
+                timeRemainingSeconds = GameState.getTimerDuration(state.difficulty)
+            )
+        }
     }
 
     fun completeMathChallenge() {
-        _gameState.value = _gameState.value.copy(
-            needsMathChallenge = false,
-            mathChallengeCompleted = true,
-            unlockedColors = GameColor.getAvailableColors(_gameState.value.currentLevel),
-            isTimerActive = true,
-            timeRemainingSeconds = GameState.getTimerDuration(_gameState.value.difficulty)
-        )
+        _gameState.update { state ->
+            state.copy(
+                needsMathChallenge = false,
+                mathChallengeCompleted = true,
+                unlockedColors = GameColor.getAvailableColors(state.currentLevel),
+                isTimerActive = true,
+                timeRemainingSeconds = GameState.getTimerDuration(state.difficulty)
+            )
+        }
     }
 
     fun getCurrentMathChallenge(): Pair<MathChallengeType, GameColor?>? {
-        if (!_gameState.value.needsMathChallenge) return null
+        val state = _gameState.value
+        if (!state.needsMathChallenge) return null
 
-        val challengeType = _gameState.value.mathChallengeType
-        val currentUnlocked = _gameState.value.unlockedColors
-        val nextLevelColors = GameColor.getAvailableColors(_gameState.value.currentLevel)
+        val challengeType = state.mathChallengeType
+        val currentUnlocked = state.unlockedColors
+        val nextLevelColors = GameColor.getAvailableColors(state.currentLevel)
 
         val nextColor = nextLevelColors.firstOrNull { color ->
             !currentUnlocked.any { it.name == color.name }
@@ -168,8 +166,9 @@ class GameController(initialDifficulty: Difficulty = Difficulty.MEDIUM) {
     }
 
     fun deductPointsForWrongMathAnswer() {
-        val newScore = (_gameState.value.currentScore - 75).coerceAtLeast(0)
-        _gameState.value = _gameState.value.copy(currentScore = newScore)
+        _gameState.update { state ->
+            state.copy(currentScore = (state.currentScore - 75).coerceAtLeast(0))
+        }
     }
 
     fun resetGame() {
@@ -182,58 +181,61 @@ class GameController(initialDifficulty: Difficulty = Difficulty.MEDIUM) {
     }
 
     fun forceFinishGame() {
-        _gameState.value = _gameState.value.copy(
+        _gameState.update { it.copy(
             isGameCompleted = true,
-            completedAllLevels = false,  // NOT a natural completion - menu forced
+            completedAllLevels = false,
             isTimerActive = false
-        )
+        ) }
     }
 
     // ========== TIMER MANAGEMENT ==========
 
     fun tickTimer() {
-        val currentTime = _gameState.value.timeRemainingSeconds ?: return
-        if (_gameState.value.isTimerPaused || !_gameState.value.isTimerActive) return
+        _gameState.update { state ->
+            val currentTime = state.timeRemainingSeconds ?: return@update state
+            if (state.isTimerPaused || !state.isTimerActive) return@update state
 
-        val newTime = (currentTime - 1).coerceAtLeast(0)
-        _gameState.value = _gameState.value.copy(timeRemainingSeconds = newTime)
+            val newTime = (currentTime - 1).coerceAtLeast(0)
 
-        if (newTime == 0) {
-            onTimerExpired()
+            if (newTime == 0) {
+                val similarity = state.similarity
+                val points = calculatePointsInternal(similarity, state.difficulty)
+                val timeBonus = calculateTimeBonusInternal(similarity, 0, state.difficulty)
+                val totalPoints = points + timeBonus
+                val newScore = (state.currentScore + totalPoints).coerceAtLeast(0)
+                val isSuccess = similarity >= 0.80f
+
+                state.copy(
+                    timeRemainingSeconds = 0,
+                    isMatched = isSuccess,
+                    showSuccessDialog = true,
+                    hasCheckedThisRound = true,
+                    currentScore = newScore,
+                    isTimerActive = false,
+                    lastBasePoints = points,
+                    lastTimeBonus = timeBonus
+                )
+            } else {
+                state.copy(timeRemainingSeconds = newTime)
+            }
         }
     }
 
     fun pauseTimer() {
-        _gameState.value = _gameState.value.copy(isTimerPaused = true)
+        _gameState.update { it.copy(isTimerPaused = true) }
     }
 
     fun resumeTimer() {
-        _gameState.value = _gameState.value.copy(isTimerPaused = false)
-    }
-
-    private fun onTimerExpired() {
-        val similarity = _gameState.value.similarity
-        val points = calculatePoints(similarity)
-        val timeBonus = calculateTimeBonus(similarity)
-        val totalPoints = points + timeBonus
-        val newScore = (_gameState.value.currentScore + totalPoints).coerceAtLeast(0)
-
-        val isSuccess = similarity >= 0.80f
-
-        _gameState.value = _gameState.value.copy(
-            isMatched = isSuccess,
-            showSuccessDialog = true,
-            hasCheckedThisRound = true,
-            currentScore = newScore,
-            isTimerActive = false,
-            lastBasePoints = points,
-            lastTimeBonus = timeBonus
-        )
+        _gameState.update { it.copy(isTimerPaused = false) }
     }
 
     // ========== SCORE CALCULATION ==========
 
     fun calculatePoints(similarity: Float): Int {
+        return calculatePointsInternal(similarity, _gameState.value.difficulty)
+    }
+
+    private fun calculatePointsInternal(similarity: Float, difficulty: Difficulty): Int {
         val basePoints = when {
             similarity >= 1.0f -> 150
             similarity >= 0.95f -> 100
@@ -248,7 +250,7 @@ class GameController(initialDifficulty: Difficulty = Difficulty.MEDIUM) {
             else -> -50
         }
 
-        val multiplier = when (_gameState.value.difficulty) {
+        val multiplier = when (difficulty) {
             Difficulty.EASY -> 0.75f
             Difficulty.MEDIUM -> 1.0f
             Difficulty.HARD -> 1.25f
@@ -257,13 +259,13 @@ class GameController(initialDifficulty: Difficulty = Difficulty.MEDIUM) {
         return (basePoints * multiplier).toInt()
     }
 
-    private fun calculateTimeBonus(similarity: Float): Int {
+    private fun calculateTimeBonusInternal(similarity: Float, timeRemaining: Int?, difficulty: Difficulty): Int {
         if (similarity < 0.80f) return 0
 
-        val timeRemaining = _gameState.value.timeRemainingSeconds ?: return 0
-        val totalDuration = GameState.getTimerDuration(_gameState.value.difficulty) ?: return 0
+        val time = timeRemaining ?: return 0
+        val totalDuration = GameState.getTimerDuration(difficulty) ?: return 0
 
-        val timePercent = timeRemaining.toFloat() / totalDuration.toFloat()
+        val timePercent = time.toFloat() / totalDuration.toFloat()
         return (50 * timePercent).toInt()
     }
 
@@ -304,16 +306,17 @@ class GameController(initialDifficulty: Difficulty = Difficulty.MEDIUM) {
     // ========== PRIVATE HELPERS ==========
 
     private fun startNewLevel() {
-        val previousTarget = if (_gameState.value.currentLevel > 1) {
-            _gameState.value.targetColor
+        val currentState = _gameState.value
+        val previousTarget = if (currentState.currentLevel > 1) {
+            currentState.targetColor
         } else null
 
         val (targetColor, recipe) = LevelManager.generateTargetColor(
-            _gameState.value.currentLevel,
+            currentState.currentLevel,
             previousTarget
         )
 
-        _gameState.value = _gameState.value.copy(
+        _gameState.update { it.copy(
             targetColor = targetColor,
             targetRecipe = recipe,
             mixedColor = PlatformColor.White,
@@ -322,7 +325,7 @@ class GameController(initialDifficulty: Difficulty = Difficulty.MEDIUM) {
             showSuccessDialog = false,
             similarity = 0f,
             isTimerActive = true,
-            timeRemainingSeconds = GameState.getTimerDuration(_gameState.value.difficulty)
-        )
+            timeRemainingSeconds = GameState.getTimerDuration(it.difficulty)
+        ) }
     }
 }

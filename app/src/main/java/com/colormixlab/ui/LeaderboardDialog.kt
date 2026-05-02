@@ -150,7 +150,7 @@ fun LeaderboardDialog(
                     )
                 }
 
-                Divider()
+                HorizontalDivider()
 
                 // Entries
                 if (displayedEntries.isEmpty()) {

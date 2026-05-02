@@ -3,8 +3,6 @@ package com.colormixlab.model
 import kotlin.random.Random
 
 sealed class GameColor(val name: String, val color: PlatformColor, val unlockLevel: Int) {
-    // Concrete implementation for dynamically created colors with custom unlock levels
-    class Dynamic(name: String, color: PlatformColor, unlockLevel: Int) : GameColor(name, color, unlockLevel)
 
     // Level 1: Always available base colors
     object Red : GameColor("Red", PlatformColor(0xFFE74C3Cu), 1)

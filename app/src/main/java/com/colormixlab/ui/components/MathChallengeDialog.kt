@@ -107,11 +107,6 @@ fun MathChallengeDialog(
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
     
-    // Debug: Log orientation
-    LaunchedEffect(isLandscape) {
-        android.util.Log.d("MathChallenge", "Orientation: ${if (isLandscape) "LANDSCAPE" else "PORTRAIT"}")
-    }
-    
     Dialog(
         onDismissRequest = { /* Prevent dismissal */ },
         properties = DialogProperties(

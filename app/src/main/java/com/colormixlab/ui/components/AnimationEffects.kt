@@ -165,54 +165,5 @@ fun SparkleEffect(
     }
 }
 
-@Composable
-fun RippleEffect(
-    trigger: Boolean,
-    modifier: Modifier = Modifier,
-    color: Color = Color(0xFF3498DB)
-) {
-    var isAnimating by remember { mutableStateOf(false) }
-    
-    LaunchedEffect(trigger) {
-        if (trigger && !isAnimating) {
-            isAnimating = true
-        }
-    }
-    
-    val animatedRadius by animateFloatAsState(
-        targetValue = if (isAnimating) 1f else 0f,
-        animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing),  // Reduced from 600ms
-        finishedListener = {
-            isAnimating = false
-        },
-        label = "rippleRadius"
-    )
-    
-    val animatedAlpha by animateFloatAsState(
-        targetValue = if (isAnimating) 0f else 0.8f,  // Start higher
-        animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing),
-        label = "rippleAlpha"
-    )
-    
-    if (isAnimating && animatedRadius < 1f) {
-        Canvas(modifier = modifier.fillMaxSize()) {
-            val maxRadius = size.minDimension / 2f
-            val currentRadius = maxRadius * animatedRadius
-            
-            drawCircle(
-                color = color.copy(alpha = animatedAlpha * 0.3f),
-                radius = currentRadius,
-                center = center
-            )
-            
-            if (currentRadius > maxRadius * 0.3f) {
-                drawCircle(
-                    color = color.copy(alpha = animatedAlpha * 0.2f),
-                    radius = currentRadius * 0.7f,
-                    center = center
-                )
-            }
-        }
-    }
-}
+
 

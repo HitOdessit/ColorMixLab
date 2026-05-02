@@ -102,10 +102,6 @@ class GameViewModel : ViewModel() {
         gameController.resetGame()
     }
 
-    fun completeGame() {
-        _gameState.value = _gameState.value.copy(isGameCompleted = false)
-    }
-
     fun forceFinishGame() {
         cancelTimerCoroutine()
         gameController.forceFinishGame()

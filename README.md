@@ -10,16 +10,33 @@
 
 > **A Kotlin Multiplatform color-mixing game shipping to Android and iOS from a single shared codebase — written without a single human-typed line of code.**
 
-30 levels. 15+ unlockable colors organized into 6 random tiers. Math challenges as gating mechanics. Local leaderboard with time-windowed views. Particle-based completion celebration. ~70% of the codebase shared across platforms via KMP. Built end-to-end with [Claude Code](https://docs.anthropic.com/en/docs/claude-code) — including the architecture, KMP migration, iOS port, CI workflows, tests, and this README.
+30 levels. 15+ unlockable colors organized into 6 random tiers. Math challenges as gating mechanics. Local leaderboard with time-windowed views. Particle-based completion celebration. Built end-to-end with [Cursor](https://cursor.com) and [Claude Code](https://docs.anthropic.com/en/docs/claude-code) — including the architecture, KMP migration, iOS port, CI workflows, tests, and this README.
+
+## Contents
+
+- [Project at a glance](#project-at-a-glance)
+- [Features](#features)
+- [Architecture](#architecture)
+- [Notable engineering decisions](#notable-engineering-decisions)
+- [Built entirely with AI](#built-entirely-with-ai)
+- [Project structure](#project-structure)
+- [Game mechanics](#game-mechanics)
+- [Building](#building)
+- [Testing](#testing)
+- [Roadmap & known gaps](#roadmap--known-gaps)
+- [Screenshots](#screenshots)
+- [FAQ](#faq)
+- [Try it / Connect](#try-it--connect)
+- [License](#license)
 
 ## Project at a glance
 
 | Metric | Value |
 |---|---|
-| Lines of Kotlin (shared + Android) | 6,585 |
-| Lines of Swift (iOS) | 2,007 |
+| Lines of Kotlin (total) | 6,585 |
+| Lines of Swift (iOS UI) | 2,007 |
 | Source files | 69 (52 Kotlin, 17 Swift) |
-| Code shared via KMP | ~70% |
+| Shared module (`commonMain`) | ~1,000 LOC of game logic |
 | Unit tests | 100+ across 8 test suites |
 | Levels | 30 |
 | Unlockable color tiers | 6 |
@@ -73,7 +90,7 @@ graph TB
   EX -.actual.-> iOS
 ```
 
-`GameController` is the single source of truth. Every action — adding a drop, checking a match, ticking the timer — funnels through it and is committed via atomic `StateFlow.update { }`. Both platforms observe the same `StateFlow<GameState>`. See [ARCHITECTURE.md](ARCHITECTURE.md) for the full breakdown.
+`GameController` is the single source of truth. Every action — adding a drop, checking a match, ticking the timer — funnels through it and is committed via atomic `StateFlow.update { }`. Both platforms observe the same `StateFlow<GameState>`. See [ARCHITECTURE.md](ARCHITECTURE.md) for the full breakdown and [`docs/adr/`](docs/adr/) for individual decision records.
 
 ## Notable engineering decisions
 
@@ -216,6 +233,16 @@ Coverage spans the shared game logic:
 - **LevelManager** — target generation, complexity scaling, variety (18 tests)
 - **MathQuestionGenerator** — question structure, distractor quality, difficulty scaling (15 tests)
 - **GameState**, **LeaderboardEntry**, **MathChallengeTimer** — defaults, sorting, serialization, configuration (40+ tests)
+
+## Roadmap & known gaps
+
+This is a portfolio piece, not a finished product. See [ROADMAP.md](ROADMAP.md) for the detailed list of known gaps and future work, including:
+
+- Continue extracting shared logic into KMP (~13-18% shared today; the iOS view models duplicate work that could move to `commonMain`)
+- iPad-specific layouts on iOS
+- Sound effects (`SoundProvider` actuals are currently stubbed)
+- iOS test target
+- ProGuard / R8 rules for release builds
 
 ## Screenshots
 

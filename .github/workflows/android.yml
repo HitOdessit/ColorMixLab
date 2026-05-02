@@ -20,7 +20,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Spotless check
         run: ./gradlew spotlessCheck
@@ -44,7 +44,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Build and test
         run: ./gradlew build koverXmlReport -x :shared:linkDebugFrameworkIosArm64 -x :shared:linkDebugFrameworkIosX64 -x :shared:linkDebugFrameworkIosSimulatorArm64 -x :shared:linkReleaseFrameworkIosArm64 -x :shared:linkReleaseFrameworkIosX64 -x :shared:linkReleaseFrameworkIosSimulatorArm64

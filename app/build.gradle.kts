@@ -12,7 +12,7 @@ android {
         applicationId = "com.colormixlab"
         minSdk = 24
         targetSdk = 35
-        versionCode = 27
+        versionCode = 28
         versionName = "1.${versionCode}"
 
         vectorDrawables {

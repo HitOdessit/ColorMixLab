@@ -63,3 +63,16 @@ obj/
 *.swp
 *~
 
+# Claude Code
+.claude/
+
+# Kotlin metadata
+.kotlin/
+
+# Xcode user data
+xcuserdata/
+*.xcuserstate
+*.pbxproj.bak
+
+# iOS frameworks (build output)
+*.framework

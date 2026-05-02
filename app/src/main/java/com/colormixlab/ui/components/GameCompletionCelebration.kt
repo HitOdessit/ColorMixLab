@@ -69,7 +69,7 @@ fun GameCompletionCelebration(
         animationProgress.animateTo(
             targetValue = 1f,
             animationSpec = tween(
-                durationMillis = 10000, // Extended from 9000ms
+                durationMillis = 10000,
                 easing = LinearEasing
             )
         )
@@ -484,7 +484,7 @@ private fun DrawScope.renderExplosion(
     // Color sparkle bursts (more sparkles with varied colors)
     if (progress > 0.3f) {
         val sparkleProgress = (progress - 0.3f) / 0.7f
-        val sparkleCount = 12 // Increased from 8
+        val sparkleCount = 12
         for (i in 0 until sparkleCount) {
             val angle = (i * 30f + progress * 180f) * 0.017453292f
             val distance = 100f + sparkleProgress * 150f

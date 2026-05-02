@@ -16,42 +16,54 @@ import com.colormixlab.ui.IntroScreen
 import com.colormixlab.ui.MathChallengeScreen
 import com.colormixlab.ui.theme.ColorMixLabTheme
 
+/**
+ * Top-level routes in the app. Using a sealed hierarchy gives compile-time
+ * exhaustiveness checks on the navigation `when` block — a typo or new screen
+ * cannot silently break routing.
+ */
+sealed interface Screen {
+    data object Intro : Screen
+    data object MathChallenge : Screen
+    data object Game : Screen
+}
+
+/** Single Activity hosting Compose-based navigation between [Screen] destinations. */
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+
         setContent {
             ColorMixLabTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    var currentScreen by remember { mutableStateOf("intro") }
+                    var currentScreen by remember { mutableStateOf<Screen>(Screen.Intro) }
                     var selectedDifficulty by remember { mutableStateOf(Difficulty.MEDIUM) }
                     val viewModel: GameViewModel = viewModel()
-                    
+
                     when (currentScreen) {
-                        "intro" -> IntroScreen(
+                        Screen.Intro -> IntroScreen(
                             onStartGame = { difficulty ->
                                 selectedDifficulty = difficulty
-                                currentScreen = "mathChallenge"
+                                currentScreen = Screen.MathChallenge
                             }
                         )
-                        "mathChallenge" -> MathChallengeScreen(
+                        Screen.MathChallenge -> MathChallengeScreen(
                             difficulty = selectedDifficulty,
                             onChallengeComplete = {
                                 viewModel.setDifficulty(selectedDifficulty)
                                 viewModel.resetGame()
-                                currentScreen = "game"
+                                currentScreen = Screen.Game
                             },
                             onBack = {
-                                currentScreen = "intro"
+                                currentScreen = Screen.Intro
                             }
                         )
-                        "game" -> GameScreen(
+                        Screen.Game -> GameScreen(
                             viewModel = viewModel,
                             onNavigateToIntro = {
-                                currentScreen = "intro"
+                                currentScreen = Screen.Intro
                             }
                         )
                     }

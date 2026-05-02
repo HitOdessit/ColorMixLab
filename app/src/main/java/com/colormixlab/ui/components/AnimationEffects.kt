@@ -26,7 +26,7 @@ data class ConfettiParticle(
 @Composable
 fun ConfettiEffect(
     modifier: Modifier = Modifier,
-    particleCount: Int = 30  // Reduced from 50
+    particleCount: Int = 30
 ) {
     val particles = remember {
         List(particleCount) {
@@ -41,7 +41,7 @@ fun ConfettiEffect(
                     Color(0xFF9B59B6), // Purple
                     Color(0xFF2ECC71)  // Green
                 ).random(),
-                size = Random.nextFloat() * 12f + 8f,  // Slightly smaller
+                size = Random.nextFloat() * 12f + 8f,
                 velocityX = Random.nextFloat() * 3f - 1.5f,
                 velocityY = Random.nextFloat() * 2.5f + 1.5f,
                 rotation = Random.nextFloat() * 360f,
@@ -56,7 +56,7 @@ fun ConfettiEffect(
     LaunchedEffect(Unit) {
         animationProgress.animateTo(
             targetValue = 1f,
-            animationSpec = tween(2500, easing = LinearEasing)  // Reduced from 3000ms
+            animationSpec = tween(2500, easing = LinearEasing)
         )
     }
     
@@ -93,7 +93,7 @@ data class SparkleParticle(
 @Composable
 fun SparkleEffect(
     modifier: Modifier = Modifier,
-    sparkleCount: Int = 12  // Reduced from 20
+    sparkleCount: Int = 12
 ) {
     val sparkles = remember {
         List(sparkleCount) {
@@ -118,7 +118,7 @@ fun SparkleEffect(
     LaunchedEffect(Unit) {
         animationProgress.animateTo(
             targetValue = 1f,
-            animationSpec = tween(1200, easing = FastOutSlowInEasing)  // Reduced from 1500ms
+            animationSpec = tween(1200, easing = FastOutSlowInEasing)
         )
         animationAlpha.animateTo(
             targetValue = 0f,
@@ -139,7 +139,7 @@ fun SparkleEffect(
             val currentX = centerX + (cos(radians) * distance).toFloat()
             val currentY = centerY + (sin(radians) * distance).toFloat()
             
-            val sparkleSize = (1f - progress) * 10f  // Slightly smaller
+            val sparkleSize = (1f - progress) * 10f
             
             drawCircle(
                 color = sparkle.color.copy(alpha = alpha),

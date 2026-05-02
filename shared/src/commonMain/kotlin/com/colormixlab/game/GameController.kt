@@ -8,8 +8,21 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.datetime.Clock
 
+/**
+ * Central game state machine. Owns every gameplay action: adding color drops,
+ * checking matches, advancing levels, ticking the timer, and computing scores.
+ *
+ * State is exposed as a [StateFlow] of immutable [GameState] snapshots. All
+ * mutations go through [MutableStateFlow.update] so concurrent callers (the
+ * UI thread and the game-tick coroutine) can never observe a partially updated
+ * state.
+ *
+ * Lives in `commonMain` so Android and iOS share a single source of truth.
+ */
 class GameController(initialDifficulty: Difficulty = Difficulty.MEDIUM) {
     private val _gameState = MutableStateFlow(GameState(difficulty = initialDifficulty))
+
+    /** Observable state stream. UI layers collect from this to render. */
     val gameState: StateFlow<GameState> = _gameState.asStateFlow()
 
     init {
@@ -20,10 +33,12 @@ class GameController(initialDifficulty: Difficulty = Difficulty.MEDIUM) {
 
     // ========== GAME ACTIONS ==========
 
+    /** Switch difficulty mid-session. Affects scoring multipliers and timer durations from the next level. */
     fun setDifficulty(difficulty: Difficulty) {
         _gameState.update { it.copy(difficulty = difficulty) }
     }
 
+    /** Add one drop of [color] to the bowl, recalculating the mixed color and similarity. */
     fun addColorDrop(color: GameColor) {
         _gameState.update { state ->
             val currentDrops = state.drops.toMutableMap()
@@ -40,6 +55,7 @@ class GameController(initialDifficulty: Difficulty = Difficulty.MEDIUM) {
         }
     }
 
+    /** Empty the bowl, resetting drops, mixed color, and similarity. */
     fun clearBowl() {
         _gameState.update { it.copy(
             drops = emptyMap(),
@@ -48,6 +64,11 @@ class GameController(initialDifficulty: Difficulty = Difficulty.MEDIUM) {
         ) }
     }
 
+    /**
+     * Check the current mix against the target. Awards points based on similarity
+     * and (on Medium/Hard) adds a time bonus for remaining seconds. Idempotent
+     * within a level — a second call in the same round is a no-op.
+     */
     fun checkMatch() {
         _gameState.update { state ->
             if (state.hasCheckedThisRound) return@update state
@@ -57,7 +78,7 @@ class GameController(initialDifficulty: Difficulty = Difficulty.MEDIUM) {
             val timeBonus = calculateTimeBonusInternal(similarity, state.timeRemainingSeconds, state.difficulty)
             val totalPoints = points + timeBonus
             val newScore = (state.currentScore + totalPoints).coerceAtLeast(0)
-            val isSuccess = similarity >= 0.80f
+            val isSuccess = similarity >= GameConstants.MATCH_SUCCESS_THRESHOLD
 
             state.copy(
                 isMatched = isSuccess,
@@ -70,6 +91,11 @@ class GameController(initialDifficulty: Difficulty = Difficulty.MEDIUM) {
         }
     }
 
+    /**
+     * Advance to the next level. If the next level requires a math challenge
+     * (color unlock or milestone), flags [GameState.needsMathChallenge] and
+     * pauses the timer until [completeMathChallenge] is called.
+     */
     fun nextLevel() {
         _gameState.update { state ->
             val currentLevel = state.currentLevel
@@ -85,9 +111,9 @@ class GameController(initialDifficulty: Difficulty = Difficulty.MEDIUM) {
 
             val newLevel = currentLevel + 1
 
-            val colorUnlockLevels = listOf(4, 7, 10, 13, 16, 19)
-            val needsColorUnlock = newLevel in colorUnlockLevels
-            val needsMilestone = newLevel > 19 && (newLevel - 19) % 3 == 0
+            val needsColorUnlock = newLevel in GameConstants.COLOR_UNLOCK_LEVELS
+            val needsMilestone = newLevel > GameConstants.MILESTONE_START_LEVEL &&
+                (newLevel - GameConstants.MILESTONE_START_LEVEL) % GameConstants.MILESTONE_INTERVAL == 0
 
             val needsChallenge = needsColorUnlock || needsMilestone
             val challengeType = when {
@@ -119,6 +145,7 @@ class GameController(initialDifficulty: Difficulty = Difficulty.MEDIUM) {
         }
     }
 
+    /** Generate a fresh target for the current level, keeping the score and level. */
     fun retryLevel() {
         _gameState.update { state ->
             val previousTarget = state.targetColor
@@ -138,6 +165,7 @@ class GameController(initialDifficulty: Difficulty = Difficulty.MEDIUM) {
         }
     }
 
+    /** Mark the current math challenge complete and unlock the gated color tier. */
     fun completeMathChallenge() {
         _gameState.update { state ->
             state.copy(
@@ -150,6 +178,10 @@ class GameController(initialDifficulty: Difficulty = Difficulty.MEDIUM) {
         }
     }
 
+    /**
+     * Returns the active math challenge (type + the color about to unlock), or
+     * `null` if no challenge is currently required.
+     */
     fun getCurrentMathChallenge(): Pair<MathChallengeType, GameColor?>? {
         val state = _gameState.value
         if (!state.needsMathChallenge) return null
@@ -165,12 +197,14 @@ class GameController(initialDifficulty: Difficulty = Difficulty.MEDIUM) {
         return Pair(challengeType, nextColor)
     }
 
+    /** Apply the wrong-answer score penalty (clamped at zero). */
     fun deductPointsForWrongMathAnswer() {
         _gameState.update { state ->
-            state.copy(currentScore = (state.currentScore - 75).coerceAtLeast(0))
+            state.copy(currentScore = (state.currentScore - GameConstants.WRONG_MATH_ANSWER_PENALTY).coerceAtLeast(0))
         }
     }
 
+    /** Reset to a fresh game at level 1 with a new random color palette. */
     fun resetGame() {
         GameColor.resetColors()
         val seed = Clock.System.now().toEpochMilliseconds()
@@ -180,6 +214,7 @@ class GameController(initialDifficulty: Difficulty = Difficulty.MEDIUM) {
         startNewLevel()
     }
 
+    /** End the current game from the menu (not a natural completion). */
     fun forceFinishGame() {
         _gameState.update { it.copy(
             isGameCompleted = true,
@@ -190,6 +225,10 @@ class GameController(initialDifficulty: Difficulty = Difficulty.MEDIUM) {
 
     // ========== TIMER MANAGEMENT ==========
 
+    /**
+     * Decrement the timer by one second. Triggers automatic match-check when
+     * time hits zero. Called every second by the platform-side coroutine.
+     */
     fun tickTimer() {
         _gameState.update { state ->
             val currentTime = state.timeRemainingSeconds ?: return@update state
@@ -203,7 +242,7 @@ class GameController(initialDifficulty: Difficulty = Difficulty.MEDIUM) {
                 val timeBonus = calculateTimeBonusInternal(similarity, 0, state.difficulty)
                 val totalPoints = points + timeBonus
                 val newScore = (state.currentScore + totalPoints).coerceAtLeast(0)
-                val isSuccess = similarity >= 0.80f
+                val isSuccess = similarity >= GameConstants.MATCH_SUCCESS_THRESHOLD
 
                 state.copy(
                     timeRemainingSeconds = 0,
@@ -221,16 +260,19 @@ class GameController(initialDifficulty: Difficulty = Difficulty.MEDIUM) {
         }
     }
 
+    /** Pause the timer (e.g., when a dialog is showing). */
     fun pauseTimer() {
         _gameState.update { it.copy(isTimerPaused = true) }
     }
 
+    /** Resume a paused timer. */
     fun resumeTimer() {
         _gameState.update { it.copy(isTimerPaused = false) }
     }
 
     // ========== SCORE CALCULATION ==========
 
+    /** Calculate base points for a given match similarity at the current difficulty. */
     fun calculatePoints(similarity: Float): Int {
         return calculatePointsInternal(similarity, _gameState.value.difficulty)
     }
@@ -241,7 +283,7 @@ class GameController(initialDifficulty: Difficulty = Difficulty.MEDIUM) {
             similarity >= 0.95f -> 100
             similarity >= 0.90f -> 80
             similarity >= 0.85f -> 60
-            similarity >= 0.80f -> 40
+            similarity >= GameConstants.MATCH_SUCCESS_THRESHOLD -> 40
             similarity >= 0.75f -> -10
             similarity >= 0.70f -> -15
             similarity >= 0.65f -> -20
@@ -251,33 +293,34 @@ class GameController(initialDifficulty: Difficulty = Difficulty.MEDIUM) {
         }
 
         val multiplier = when (difficulty) {
-            Difficulty.EASY -> 0.75f
-            Difficulty.MEDIUM -> 1.0f
-            Difficulty.HARD -> 1.25f
+            Difficulty.EASY -> GameConstants.EASY_MULTIPLIER
+            Difficulty.MEDIUM -> GameConstants.MEDIUM_MULTIPLIER
+            Difficulty.HARD -> GameConstants.HARD_MULTIPLIER
         }
 
         return (basePoints * multiplier).toInt()
     }
 
     private fun calculateTimeBonusInternal(similarity: Float, timeRemaining: Int?, difficulty: Difficulty): Int {
-        if (similarity < 0.80f) return 0
+        if (similarity < GameConstants.MATCH_SUCCESS_THRESHOLD) return 0
 
         val time = timeRemaining ?: return 0
         val totalDuration = GameState.getTimerDuration(difficulty) ?: return 0
 
         val timePercent = time.toFloat() / totalDuration.toFloat()
-        return (50 * timePercent).toInt()
+        return (GameConstants.MAX_TIME_BONUS * timePercent).toInt()
     }
 
     // ========== UI MESSAGES ==========
 
+    /** Human-readable feedback message for a given match similarity. */
     fun getResultMessage(similarity: Float): String {
         return when {
             similarity >= 1.0f -> "Perfect Match!"
             similarity >= 0.95f -> "Excellent Mix!"
             similarity >= 0.90f -> "Great Job!"
             similarity >= 0.85f -> "Very Good!"
-            similarity >= 0.80f -> "Nice Work!"
+            similarity >= GameConstants.MATCH_SUCCESS_THRESHOLD -> "Nice Work!"
             similarity >= 0.75f -> "Almost There!"
             similarity >= 0.70f -> "Close!"
             similarity >= 0.65f -> "Getting Closer!"
@@ -287,13 +330,14 @@ class GameController(initialDifficulty: Difficulty = Difficulty.MEDIUM) {
         }
     }
 
+    /** Emoji corresponding to a given match similarity. */
     fun getResultEmoji(similarity: Float): String {
         return when {
             similarity >= 1.0f -> "🎉"
             similarity >= 0.95f -> "⭐"
             similarity >= 0.90f -> "👍"
             similarity >= 0.85f -> "😊"
-            similarity >= 0.80f -> "👌"
+            similarity >= GameConstants.MATCH_SUCCESS_THRESHOLD -> "👌"
             similarity >= 0.75f -> "🎨"
             similarity >= 0.70f -> "💪"
             similarity >= 0.65f -> "🤔"

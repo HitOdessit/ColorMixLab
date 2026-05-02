@@ -14,6 +14,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.colormixlab.game.GameConstants
 import com.colormixlab.model.GameColor
 import com.colormixlab.ui.components.ConfettiEffect
 import com.colormixlab.ui.components.SparkleEffect
@@ -62,7 +63,7 @@ fun ResultDialog(
     // Determine if a new color is being unlocked
     // Colors unlock at levels 4, 7, 10, 13, 16, 19 (after completing levels 3, 6, 9, 12, 15, 18)
     val newlyUnlockedColor = remember(level, unlockedColors) {
-        if (isSuccess && level in listOf(3, 6, 9, 12, 15, 18)) {
+        if (isSuccess && (level + 1) in GameConstants.COLOR_UNLOCK_LEVELS) {
             val nextLevel = level + 1
             GameColor.getAllColors().find { it.unlockLevel == nextLevel }
         } else {

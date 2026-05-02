@@ -134,8 +134,6 @@ fun MixingBowl(
                 val centerX = size.width / 2
                 val centerY = size.height / 2
 
-                // Keep inner circle same absolute size as before (160dp * sqrt(0.75) / 2)
-                // Old inner radius was 80 * sqrt(0.75) ≈ 69.3dp
                 val innerRadius = 69.3f * density
 
                 // Draw the mixed color in the center

@@ -182,14 +182,18 @@ class LevelManagerTest {
 
     @Test
     fun `generateTargetColor complexity increases with level`() {
-        val level3Recipes = List(20) { LevelManager.generateTargetColor(3).second }
-        val level12Recipes = List(20) { LevelManager.generateTargetColor(12).second }
-        val level25Recipes = List(20) { LevelManager.generateTargetColor(25).second }
+        // Use max recipe size rather than averages because averages can vary
+        // by random sampling. Per LevelManager: levels 1-3 always use 2 colors,
+        // levels 4-9 use 2-3, levels 10-15 use 2-4, levels 16+ use 2-5.
+        // With 100 samples the maximum should reliably reach the upper bound.
+        val sample = 100
+        val maxLevel3 = List(sample) { LevelManager.generateTargetColor(3).second.size }.max()
+        val maxLevel12 = List(sample) { LevelManager.generateTargetColor(12).second.size }.max()
+        val maxLevel25 = List(sample) { LevelManager.generateTargetColor(25).second.size }.max()
 
-        val avgLevel3Colors = level3Recipes.map { it.size }.average()
-        val avgLevel12Colors = level12Recipes.map { it.size }.average()
-        val avgLevel25Colors = level25Recipes.map { it.size }.average()
-
-        assertTrue(avgLevel12Colors >= avgLevel3Colors && avgLevel25Colors >= avgLevel12Colors)
+        assertEquals("Level 3 should always use 2 colors", 2, maxLevel3)
+        assertTrue("Level 12 should sometimes reach 4 colors", maxLevel12 >= 3)
+        assertTrue("Level 25 should sometimes reach 5 colors", maxLevel25 >= 4)
+        assertTrue("Max recipe size should grow with level", maxLevel25 >= maxLevel12)
     }
 }

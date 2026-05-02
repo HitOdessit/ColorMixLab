@@ -10,22 +10,27 @@ plugins {
     alias(libs.plugins.kover)
 }
 
+// Capture catalog values at root scope; they are not accessible by name
+// inside allprojects { } because the receiver is a subproject Project.
+val detektVersion = libs.versions.detekt.get()
+val ktlintVersion = libs.versions.ktlint.get()
+
 allprojects {
     apply(plugin = "io.gitlab.arturbosch.detekt")
     apply(plugin = "com.diffplug.spotless")
 
-    detekt {
-        toolVersion = libs.versions.detekt.get()
+    extensions.configure<io.gitlab.arturbosch.detekt.extensions.DetektExtension> {
+        toolVersion = detektVersion
         config.setFrom("$rootDir/config/detekt/detekt.yml")
         buildUponDefaultConfig = true
         autoCorrect = false
     }
 
-    spotless {
+    extensions.configure<com.diffplug.gradle.spotless.SpotlessExtension> {
         kotlin {
             target("**/*.kt")
             targetExclude("**/build/**", "**/.gradle/**")
-            ktlint(libs.versions.ktlint.get())
+            ktlint(ktlintVersion)
                 .editorConfigOverride(
                     mapOf(
                         "ktlint_standard_filename" to "disabled",
@@ -38,7 +43,7 @@ allprojects {
         kotlinGradle {
             target("**/*.gradle.kts")
             targetExclude("**/build/**")
-            ktlint(libs.versions.ktlint.get())
+            ktlint(ktlintVersion)
         }
     }
 }

@@ -2,7 +2,7 @@
 
 [![Build](https://github.com/HitOdessit/ColorMixLab/actions/workflows/android.yml/badge.svg)](https://github.com/HitOdessit/ColorMixLab/actions)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.0-blue.svg)](https://kotlinlang.org)
-[![Swift](https://img.shields.io/badge/Swift-5.9-orange.svg)](https://swift.org)
+[![Swift](https://img.shields.io/badge/Swift-5.0-orange.svg)](https://swift.org)
 [![Platform](https://img.shields.io/badge/Platform-Android%20%7C%20iOS-green.svg)]()
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -160,6 +160,10 @@ Test coverage includes:
 ## Screenshots
 
 > Screenshots coming soon. To capture your own, run the app on an emulator and take screenshots of the intro screen, gameplay, math challenge, and game completion.
+
+## Contributing
+
+Issues and suggestions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 ## License
 

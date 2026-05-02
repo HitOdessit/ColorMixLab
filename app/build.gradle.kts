@@ -12,8 +12,8 @@ android {
         applicationId = "com.colormixlab"
         minSdk = 24
         targetSdk = 35
-        versionCode = 28
-        versionName = "1.${versionCode}"
+        versionCode = 29
+        versionName = "1.0.${versionCode}"
 
         vectorDrawables {
             useSupportLibrary = true

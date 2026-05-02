@@ -11,7 +11,14 @@
       "Bash(unzip:*)",
       "Bash(./gradlew:*)",
       "Bash(paste:*)",
-      "Bash(xcodebuild:*)"
+      "Bash(xcodebuild:*)",
+      "Bash(gh auth *)",
+      "Bash(brew install *)",
+      "Bash(brew list *)",
+      "Bash(sudo chown *)",
+      "Bash(/tmp/gh/gh_2.92.0_macOS_arm64/bin/gh --version)",
+      "Bash(/tmp/gh/gh_2.92.0_macOS_arm64/bin/gh auth *)",
+      "Bash(/tmp/gh/gh_2.92.0_macOS_arm64/bin/gh repo *)"
     ],
     "deny": [],
     "ask": []

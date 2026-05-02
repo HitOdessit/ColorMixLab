@@ -266,3 +266,4 @@ MathChallengeDialog (detects landscape)
 
 The math challenge dialog now fits perfectly on **all Android tablets and phones** in landscape mode without any scrolling required. The content is readable, tappable, and maintains full functionality.
 
+

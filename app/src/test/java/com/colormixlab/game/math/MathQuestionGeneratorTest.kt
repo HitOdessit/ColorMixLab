@@ -87,7 +87,7 @@ class MathQuestionGeneratorTest {
     @Test
     fun `generateQuestion multiplier2 is between 2 and 12`() {
         val questions = List(30) {
-            MathQuestionGenerator.generateQuestion(Difficulty.values().random(), 1)
+            MathQuestionGenerator.generateQuestion(Difficulty.entries.random(), 1)
         }
 
         questions.forEach { question ->

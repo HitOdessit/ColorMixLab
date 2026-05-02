@@ -1,6 +1,8 @@
 package com.colormixlab.model
 
 import com.colormixlab.game.Difficulty
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.encodeToString
 import org.junit.Assert.*
 import org.junit.Test
 
@@ -127,6 +129,26 @@ class LeaderboardEntryTest {
         assertEquals("First should have earliest timestamp", time1, sorted[0].timestamp)
         assertEquals("Second should have middle timestamp", time2, sorted[1].timestamp)
         assertEquals("Third should have latest timestamp", time3, sorted[2].timestamp)
+    }
+
+    @Test
+    fun `serialization roundtrip preserves all fields`() {
+        val entry = LeaderboardEntry(
+            nickname = "TestPlayer",
+            score = 1500,
+            level = 25,
+            difficulty = Difficulty.HARD,
+            timestamp = 1700000000000L
+        )
+
+        val json = Json.encodeToString(entry)
+        val decoded = Json.decodeFromString<LeaderboardEntry>(json)
+
+        assertEquals(entry.nickname, decoded.nickname)
+        assertEquals(entry.score, decoded.score)
+        assertEquals(entry.level, decoded.level)
+        assertEquals(entry.difficulty, decoded.difficulty)
+        assertEquals(entry.timestamp, decoded.timestamp)
     }
 
     @Test

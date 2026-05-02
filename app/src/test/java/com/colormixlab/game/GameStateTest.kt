@@ -1,40 +1,37 @@
 package com.colormixlab.game
 
-import androidx.compose.ui.graphics.Color
 import com.colormixlab.model.GameColor
+import com.colormixlab.model.PlatformColor
 import org.junit.Assert.*
+import org.junit.Before
 import org.junit.Test
 
-/**
- * Unit tests for GameState helper methods and configuration.
- */
 class GameStateTest {
+
+    @Before
+    fun setup() {
+        GameColor.initializeGameColors(42L)
+    }
 
     @Test
     fun `getDropCount returns 0 for color not in drops`() {
         val state = GameState(drops = emptyMap())
 
-        val count = state.getDropCount(GameColor.Red)
-
-        assertEquals("Count should be 0 for missing color", 0, count)
+        assertEquals(0, state.getDropCount(GameColor.Red))
     }
 
     @Test
     fun `getDropCount returns correct count for color in drops`() {
         val state = GameState(drops = mapOf(GameColor.Red to 5))
 
-        val count = state.getDropCount(GameColor.Red)
-
-        assertEquals("Count should match drops map", 5, count)
+        assertEquals(5, state.getDropCount(GameColor.Red))
     }
 
     @Test
     fun `getTotalDrops returns 0 for empty drops`() {
         val state = GameState(drops = emptyMap())
 
-        val total = state.getTotalDrops()
-
-        assertEquals("Total should be 0 for empty drops", 0, total)
+        assertEquals(0, state.getTotalDrops())
     }
 
     @Test
@@ -47,163 +44,119 @@ class GameStateTest {
             )
         )
 
-        val total = state.getTotalDrops()
-
-        assertEquals("Total should sum all drop counts", 10, total)
+        assertEquals(10, state.getTotalDrops())
     }
 
     @Test
     fun `getTotalDrops with single color`() {
         val state = GameState(drops = mapOf(GameColor.Red to 7))
 
-        val total = state.getTotalDrops()
-
-        assertEquals("Total should equal single color count", 7, total)
+        assertEquals(7, state.getTotalDrops())
     }
 
     @Test
     fun `getTimerDuration returns null for EASY difficulty`() {
-        val duration = GameState.getTimerDuration(Difficulty.EASY)
-
-        assertNull("EASY mode should have no timer", duration)
+        assertNull(GameState.getTimerDuration(Difficulty.EASY))
     }
 
     @Test
     fun `getTimerDuration returns 40 seconds for MEDIUM difficulty`() {
-        val duration = GameState.getTimerDuration(Difficulty.MEDIUM)
-
-        assertEquals("MEDIUM mode should have 40 second timer", 40, duration)
+        assertEquals(40, GameState.getTimerDuration(Difficulty.MEDIUM))
     }
 
     @Test
     fun `getTimerDuration returns 20 seconds for HARD difficulty`() {
-        val duration = GameState.getTimerDuration(Difficulty.HARD)
-
-        assertEquals("HARD mode should have 20 second timer", 20, duration)
+        assertEquals(20, GameState.getTimerDuration(Difficulty.HARD))
     }
 
     @Test
     fun `default GameState has level 1`() {
-        val state = GameState()
-
-        assertEquals("Default level should be 1", 1, state.currentLevel)
+        assertEquals(1, GameState().currentLevel)
     }
 
     @Test
     fun `default GameState has score 0`() {
-        val state = GameState()
-
-        assertEquals("Default score should be 0", 0, state.currentScore)
+        assertEquals(0, GameState().currentScore)
     }
 
     @Test
     fun `default GameState has MEDIUM difficulty`() {
-        val state = GameState()
-
-        assertEquals("Default difficulty should be MEDIUM", Difficulty.MEDIUM, state.difficulty)
+        assertEquals(Difficulty.MEDIUM, GameState().difficulty)
     }
 
     @Test
     fun `default GameState has white target color`() {
-        val state = GameState()
-
-        assertEquals("Default target should be white", Color.White, state.targetColor)
+        assertEquals(PlatformColor.White, GameState().targetColor)
     }
 
     @Test
     fun `default GameState has white mixed color`() {
-        val state = GameState()
-
-        assertEquals("Default mixed color should be white", Color.White, state.mixedColor)
+        assertEquals(PlatformColor.White, GameState().mixedColor)
     }
 
     @Test
     fun `default GameState has empty drops`() {
-        val state = GameState()
-
-        assertTrue("Default drops should be empty", state.drops.isEmpty())
+        assertTrue(GameState().drops.isEmpty())
     }
 
     @Test
     fun `default GameState has similarity 0`() {
-        val state = GameState()
-
-        assertEquals("Default similarity should be 0", 0f, state.similarity, 0.001f)
+        assertEquals(0f, GameState().similarity, 0.001f)
     }
 
     @Test
     fun `default GameState is not matched`() {
-        val state = GameState()
-
-        assertFalse("Default state should not be matched", state.isMatched)
+        assertFalse(GameState().isMatched)
     }
 
     @Test
     fun `default GameState does not show success dialog`() {
-        val state = GameState()
-
-        assertFalse("Default state should not show success dialog", state.showSuccessDialog)
+        assertFalse(GameState().showSuccessDialog)
     }
 
     @Test
     fun `default GameState has not checked this round`() {
-        val state = GameState()
-
-        assertFalse("Default state should not have checked this round", state.hasCheckedThisRound)
+        assertFalse(GameState().hasCheckedThisRound)
     }
 
     @Test
     fun `default GameState is not game completed`() {
-        val state = GameState()
-
-        assertFalse("Default state should not be game completed", state.isGameCompleted)
+        assertFalse(GameState().isGameCompleted)
     }
 
     @Test
     fun `default GameState has base colors unlocked`() {
         val state = GameState()
 
-        assertTrue("Base colors should be unlocked at level 1", state.unlockedColors.isNotEmpty())
-        assertTrue("Red should be available", state.unlockedColors.any { it.name == "Red" })
-        assertTrue("Blue should be available", state.unlockedColors.any { it.name == "Blue" })
-        assertTrue("Green should be available", state.unlockedColors.any { it.name == "Green" })
+        assertTrue(state.unlockedColors.isNotEmpty())
+        assertTrue(state.unlockedColors.any { it.name == "Red" })
+        assertTrue(state.unlockedColors.any { it.name == "Blue" })
+        assertTrue(state.unlockedColors.any { it.name == "Green" })
     }
 
     @Test
     fun `MAX_LEVEL is 30`() {
-        assertEquals("Maximum level should be 30", 30, GameState.MAX_LEVEL)
+        assertEquals(30, GameState.MAX_LEVEL)
     }
 
     @Test
     fun `default GameState timer is not active`() {
-        val state = GameState()
-
-        assertFalse("Timer should not be active by default", state.isTimerActive)
+        assertFalse(GameState().isTimerActive)
     }
 
     @Test
     fun `default GameState timer is not paused`() {
-        val state = GameState()
-
-        assertFalse("Timer should not be paused by default", state.isTimerPaused)
+        assertFalse(GameState().isTimerPaused)
     }
 
     @Test
     fun `default GameState has no math challenge`() {
-        val state = GameState()
-
-        assertFalse("Should not need math challenge by default", state.needsMathChallenge)
+        assertFalse(GameState().needsMathChallenge)
     }
 
     @Test
     fun `default GameState has NONE math challenge type`() {
-        val state = GameState()
-
-        assertEquals(
-            "Default math challenge type should be NONE",
-            MathChallengeType.NONE,
-            state.mathChallengeType
-        )
+        assertEquals(MathChallengeType.NONE, GameState().mathChallengeType)
     }
 
     @Test

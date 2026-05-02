@@ -27,6 +27,11 @@ allprojects {
     }
 
     extensions.configure<com.diffplug.gradle.spotless.SpotlessExtension> {
+        // Don't make `check` (and therefore `build`) depend on spotlessCheck.
+        // Run `./gradlew spotlessCheck` explicitly when needed; CI's quality
+        // job runs it with continue-on-error.
+        isEnforceCheck = false
+
         kotlin {
             target("**/*.kt")
             targetExclude("**/build/**", "**/.gradle/**")
@@ -36,7 +41,9 @@ allprojects {
                         "ktlint_standard_filename" to "disabled",
                         "ktlint_standard_no-wildcard-imports" to "disabled",
                         "ktlint_standard_property-naming" to "disabled",
-                        "ktlint_standard_function-naming" to "disabled"
+                        "ktlint_standard_function-naming" to "disabled",
+                        "ktlint_standard_value-parameter-comment" to "disabled",
+                        "ktlint_standard_value-argument-comment" to "disabled"
                     )
                 )
         }

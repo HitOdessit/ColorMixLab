@@ -128,7 +128,7 @@ fun MathChallengeHeader(
 
                 // Progress bar
                 LinearProgressIndicator(
-                    progress = correctCount.toFloat() / requiredCount,
+                    progress = { correctCount.toFloat() / requiredCount },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(progressHeight),

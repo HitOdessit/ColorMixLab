@@ -1,19 +1,3 @@
-*.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
-local.properties
-
 # Built application files
 *.apk
 *.aar
@@ -31,48 +15,45 @@ bin/
 gen/
 out/
 
-# Gradle files
+# Gradle
 .gradle/
 build/
 
-# Local configuration file (sdk path, etc)
+# Local configuration
 local.properties
 
-# Android Studio
+# Android Studio / IntelliJ
 *.iml
 .idea/
-.DS_Store
+captures/
 
 # NDK
 obj/
+.externalNativeBuild/
+.cxx/
 
 # Keystore files
 *.jks
 *.keystore
 
-# External native build folder generated in Android Studio 2.2 and later
-.externalNativeBuild
-.cxx/
+# Xcode
+xcuserdata/
+*.xcuserstate
+*.pbxproj.bak
 
-# Version control
-.svn/
-.git/
+# iOS build output
+*.framework
+
+# Kotlin metadata
+.kotlin/
+
+# Claude Code
+.claude/
+
+# OS
+.DS_Store
 
 # Misc
 *.log
 *.swp
 *~
-
-# Claude Code
-.claude/
-
-# Kotlin metadata
-.kotlin/
-
-# Xcode user data
-xcuserdata/
-*.xcuserstate
-*.pbxproj.bak
-
-# iOS frameworks (build output)
-*.framework

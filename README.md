@@ -1,114 +1,166 @@
 # Color Mix Lab
 
-A simple, educational color-mixing game for kids ages 7-11.
+[![Build](https://github.com/HitOdessit/ColorMixLab/actions/workflows/android.yml/badge.svg)](https://github.com/HitOdessit/ColorMixLab/actions)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.0-blue.svg)](https://kotlinlang.org)
+[![Swift](https://img.shields.io/badge/Swift-5.9-orange.svg)](https://swift.org)
+[![Platform](https://img.shields.io/badge/Platform-Android%20%7C%20iOS-green.svg)]()
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-## Overview
+> **Built entirely with AI.** Every line of code in this project was generated using AI tooling (Claude Code). No code was written by hand. See [CLAUDE.md](CLAUDE.md) for details.
 
-Color Mix Lab is a kid-friendly Android game where players mix colors by tapping buttons to add color drops to a mixing bowl. The goal is to match a target color by combining different colors.
+A cross-platform educational color-mixing game for kids ages 7-11, built with Kotlin Multiplatform and native UI frameworks (Jetpack Compose for Android, SwiftUI for iOS).
 
 ## Features
 
-- **Progressive Difficulty**: Starts with simple primary colors and unlocks more complex colors as you advance
-- **Educational**: Teaches color mixing concepts (Red + Blue = Purple, etc.)
-- **Kid-Friendly UI**: Large buttons, clear visuals, haptic feedback
-- **No Ads or Analytics**: Pure offline gameplay
-- **Landscape Mode**: Optimized for comfortable play
+- **30 progressive levels** with increasing complexity (2-5 color recipes)
+- **Math challenges** as gating mechanics between color tiers (multiplication questions with plausible distractors)
+- **Three difficulty modes** (Easy, Medium, Hard) with timed gameplay on Medium/Hard
+- **Local leaderboard** with time-filtered views (Today, This Week, This Month, All Time)
+- **Game completion celebration** with multi-phase particle animations
+- **Haptic feedback** on interactions (color drops, match results, timer warnings)
+- **Adaptive layouts** for portrait, landscape, phones, and tablets
+- **No ads, no analytics, no tracking** -- pure offline gameplay
+- **Cross-platform** -- shared game logic via Kotlin Multiplatform
 
-## Tech Stack
+## Architecture
 
-- **Language**: Kotlin
-- **UI Framework**: Jetpack Compose
-- **Architecture**: Lightweight MVVM with ViewModel
-- **Min SDK**: 24 (Android 7.0)
-- **Target SDK**: 34
+```
+┌─────────────────────────────────────────────────────┐
+│                    Shared Module (KMP)               │
+│  ┌───────────┐  ┌────────────┐  ┌────────────────┐  │
+│  │ GameState  │  │ GameColor  │  │ MathQuestion   │  │
+│  │ Controller │  │ ColorMixer │  │ Generator      │  │
+│  │ LevelMgr   │  │ Leaderboard│  │ Timer Config   │  │
+│  └───────────┘  └────────────┘  └────────────────┘  │
+│  ┌─────────────────────────────────────────────────┐ │
+│  │ Platform Abstractions (expect/actual)           │ │
+│  │ HapticProvider · PlatformStorage · SoundProvider│ │
+│  └─────────────────────────────────────────────────┘ │
+└────────────────┬──────────────────┬──────────────────┘
+                 │                  │
+    ┌────────────▼──────┐  ┌───────▼────────────┐
+    │  Android App      │  │  iOS App           │
+    │  Jetpack Compose  │  │  SwiftUI           │
+    │  Material 3       │  │  NavigationStack   │
+    │  ViewModel        │  │  ObservableObject  │
+    └───────────────────┘  └────────────────────┘
+```
 
 ## Project Structure
 
 ```
-app/src/main/java/com/colormixlab/
-├── MainActivity.kt                 # Main activity
-├── ui/
-│   ├── GameScreen.kt              # Main game screen
-│   ├── components/                # Reusable UI components
-│   │   ├── ColorButton.kt
-│   │   ├── MixingBowl.kt
-│   │   ├── TargetColor.kt
-│   │   └── LevelDisplay.kt
-│   └── theme/
-│       └── Theme.kt               # Material 3 theme
-├── game/
-│   ├── GameViewModel.kt           # Game state management
-│   ├── GameState.kt               # Game state data class
-│   ├── ColorMixer.kt              # Color mixing logic
-│   └── LevelManager.kt            # Level generation
-├── model/
-│   └── GameColors.kt              # Color definitions
-└── utils/
-    ├── SoundManager.kt            # Sound effects (placeholder)
-    └── HapticManager.kt           # Haptic feedback
+ColorMixLab/
+├── app/                              # Android application
+│   ├── src/main/java/com/colormixlab/
+│   │   ├── MainActivity.kt
+│   │   ├── game/                     # ViewModel (thin wrapper over shared GameController)
+│   │   ├── ui/                       # Compose screens and dialogs
+│   │   │   ├── components/           # Reusable UI (MixingBowl, ColorButton, animations)
+│   │   │   ├── dialogs/              # Menu, Result, Nickname dialogs
+│   │   │   └── theme/                # Material 3 theme
+│   │   └── utils/                    # Platform utilities (haptics, sound, color conversion)
+│   └── src/test/                     # Unit tests
+├── shared/                           # Kotlin Multiplatform shared module
+│   └── src/
+│       ├── commonMain/               # Cross-platform game logic
+│       │   └── kotlin/com/colormixlab/
+│       │       ├── game/             # GameController, GameState, ColorMixer, LevelManager
+│       │       ├── model/            # GameColor, LeaderboardEntry, PlatformColor
+│       │       ├── data/             # LeaderboardManager
+│       │       ├── platform/         # expect declarations (Storage, Haptics, Sound)
+│       │       └── utils/            # MathChallengeTimer
+│       ├── androidMain/              # Android actual implementations
+│       └── iosMain/                  # iOS actual implementations
+├── iosApp/ColorMixLab/               # iOS application (Xcode project)
+│   └── ColorMixLab/
+│       ├── UI/Screens/               # SwiftUI screens
+│       ├── UI/Components/            # Reusable SwiftUI components
+│       └── Utilities/                # iOS utilities
+└── docs/
+    ├── assets/                       # Design assets (app icon SVG)
+    └── dev-notes/                    # Historical development notes
 ```
-
-## Building the Project
-
-### Prerequisites
-
-- Android Studio Hedgehog (2023.1.1) or newer
-- JDK 8 or higher
-- Android SDK with API level 34
-
-### Steps
-
-1. Open Android Studio
-2. Select "Open an Existing Project"
-3. Navigate to this project directory
-4. Wait for Gradle sync to complete
-5. Run on an emulator or physical device
-
-### Running
-
-1. Connect an Android device or start an emulator
-2. Click the "Run" button in Android Studio
-3. Select your device/emulator
-4. The app will install and launch automatically
 
 ## Game Mechanics
 
-### Color Unlocking
+### Color Progression
 
-- **Levels 1-3**: Red, Blue, Yellow (primary colors)
-- **Levels 4-6**: Orange unlocked
-- **Levels 7-9**: Purple unlocked
-- **Levels 10+**: Green unlocked
+| Levels | Available Colors | Unlocked At |
+|--------|-----------------|-------------|
+| 1-3    | Red, Blue, Green | Start |
+| 4-6    | + 1 from: Yellow, Cyan, Gray | Level 4 (after math challenge) |
+| 7-9    | + 1 from: Orange, Magenta, Coral | Level 7 (after math challenge) |
+| 10-12  | + 1 from: Purple, Lime, Turquoise | Level 10 (after math challenge) |
+| 13-15  | + 1 from: Pink, Teal | Level 13 (after math challenge) |
+| 16-18  | + 1 from tier 5 pool | Level 16 (after math challenge) |
+| 19-30  | + 1 from tier 6 pool | Level 19 (after math challenge) |
 
-### Gameplay
+Each game session randomly selects one color from each tier, so the palette varies between playthroughs.
 
-1. See the target color in the top-right
-2. Tap color buttons to add drops to the mixing bowl
-3. Watch the bowl color change in real-time
-4. Use "Clear Bowl" to start over
-5. Tap "Check Match!" when ready
-6. If colors match (within tolerance), advance to next level
+### Difficulty Modes
 
-### Difficulty
+| Mode | Timer | Math Challenge Timer | Target Complexity |
+|------|-------|---------------------|-------------------|
+| Easy | None | None | 2-5 colors |
+| Medium | 40s per level | 20s per question | 2-5 colors |
+| Hard | 20s per level | 10s per question | 2-5 colors |
 
-- Earlier levels are more forgiving with color matching
-- Later levels require more precision
-- Tolerance decreases as you progress
+### Scoring
 
-## Future Enhancements
+- Base points scale with color similarity (80-100% match required)
+- Difficulty multiplier: Easy x1, Medium x2, Hard x3
+- Time bonus on Medium/Hard for quick matches
 
-- Add actual sound effect files (currently placeholder)
-- Add colorblind accessibility mode
-- Add hints/tutorial for first-time players
-- Save progress across sessions
-- Add achievements system
-- Parent/teacher dashboard
+## Building
+
+### Prerequisites
+
+- **Android**: Android Studio (2023.1+), JDK 17+, Android SDK 35
+- **iOS**: Xcode 15+, macOS
+
+### Android
+
+```bash
+# Build
+./gradlew build
+
+# Run tests
+./gradlew test
+
+# Install on connected device
+./gradlew installDebug
+```
+
+### iOS
+
+1. Build the shared KMP framework:
+   ```bash
+   ./gradlew :shared:linkDebugFrameworkIosSimulatorArm64
+   ```
+2. Open `iosApp/ColorMixLab/ColorMixLab.xcodeproj` in Xcode
+3. Build and run on simulator or device
+
+## Testing
+
+Unit tests cover the shared game logic:
+
+```bash
+./gradlew test
+```
+
+Test coverage includes:
+- **GameController** -- core game flow (add drops, check match, advance levels, scoring, timer)
+- **ColorMixer** -- color mixing algorithm, similarity calculation
+- **LevelManager** -- target generation, level complexity scaling
+- **GameState** -- state defaults, helper methods
+- **MathQuestionGenerator** -- question generation, distractor quality, difficulty scaling
+- **LeaderboardEntry** -- sorting, serialization
+- **MathChallengeTimer** -- timer configuration per difficulty
+
+## Screenshots
+
+> Screenshots coming soon. To capture your own, run the app on an emulator and take screenshots of the intro screen, gameplay, math challenge, and game completion.
 
 ## License
 
-This is a demonstration project. Feel free to use and modify as needed.
-
-## Credits
-
-Built with ❤️ for kids learning color theory.
-
+This project is licensed under the MIT License -- see [LICENSE](LICENSE) for details.

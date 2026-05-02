@@ -50,7 +50,7 @@ jobs:
         run: ./gradlew build koverXmlReport -x :shared:linkDebugFrameworkIosArm64 -x :shared:linkDebugFrameworkIosX64 -x :shared:linkDebugFrameworkIosSimulatorArm64 -x :shared:linkReleaseFrameworkIosArm64 -x :shared:linkReleaseFrameworkIosX64 -x :shared:linkReleaseFrameworkIosSimulatorArm64
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v6
         if: success()
         with:
           files: build/reports/kover/report.xml

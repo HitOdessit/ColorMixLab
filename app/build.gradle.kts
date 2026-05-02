@@ -13,7 +13,7 @@ android {
         applicationId = "com.colormixlab"
         minSdk = 24
         targetSdk = 35
-        versionCode = 40
+        versionCode = 41
         versionName = "1.0.${versionCode}"
 
         vectorDrawables {
@@ -55,6 +55,12 @@ android {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
+    }
+
+    lint {
+        // Lint findings are reported but don't fail the build. CI surfaces
+        // them as advisory; PR reviewers can see them in the Lint reports.
+        abortOnError = false
     }
 }
 

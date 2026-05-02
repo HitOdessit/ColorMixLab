@@ -2,7 +2,9 @@ package com.colormixlab.data
 
 import com.colormixlab.game.GameConstants
 import com.colormixlab.model.LeaderboardEntry
+import com.colormixlab.platform.KeyValueStorage
 import com.colormixlab.platform.PlatformStorage
+import com.colormixlab.platform.asKeyValueStorage
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
@@ -19,7 +21,10 @@ import kotlinx.serialization.json.Json
  *
  * On Android this is backed by SharedPreferences; on iOS by NSUserDefaults.
  */
-class LeaderboardManager(private val storage: PlatformStorage) {
+class LeaderboardManager(private val storage: KeyValueStorage) {
+
+    /** Convenience constructor for production callers using [PlatformStorage]. */
+    constructor(platformStorage: PlatformStorage) : this(platformStorage.asKeyValueStorage())
 
     private companion object {
         const val KEY_ENTRIES = "leaderboard_entries"

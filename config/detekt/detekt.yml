@@ -64,8 +64,8 @@ exceptions:
   SwallowedException:
     active: false
 
-formatting:
-  active: false # Spotless/ktlint handles formatting
+# Note: the `formatting` rule set lives in the separate detekt-formatting
+# plugin and is not loaded here. Spotless/ktlint handles formatting.
 
 potential-bugs:
   UnsafeCallOnNullableType:

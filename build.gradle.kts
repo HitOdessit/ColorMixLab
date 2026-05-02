@@ -24,6 +24,9 @@ allprojects {
         config.setFrom("$rootDir/config/detekt/detekt.yml")
         buildUponDefaultConfig = true
         autoCorrect = false
+        // Don't fail `build` on lint findings. CI's quality job runs detekt
+        // explicitly with continue-on-error, treating it as advisory.
+        ignoreFailures = true
     }
 
     extensions.configure<com.diffplug.gradle.spotless.SpotlessExtension> {

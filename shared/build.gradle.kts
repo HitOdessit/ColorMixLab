@@ -1,7 +1,7 @@
 plugins {
-    kotlin("multiplatform")
-    kotlin("plugin.serialization")
-    id("com.android.library")
+    alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.android.library)
 }
 
 kotlin {
@@ -12,7 +12,6 @@ kotlin {
         }
     }
 
-    // iOS targets
     listOf(
         iosX64(),
         iosArm64(),
@@ -21,34 +20,31 @@ kotlin {
         target.binaries.framework {
             baseName = "shared"
             isStatic = true
-
-            // Export all necessary classes to iOS
-            export("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+            export(libs.kotlinx.coroutines.core)
         }
     }
 
     sourceSets {
         val commonMain by getting {
             dependencies {
-                api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.5.0")
+                api(libs.kotlinx.coroutines.core)
+                implementation(libs.kotlinx.serialization.json)
+                implementation(libs.kotlinx.datetime)
             }
         }
         val commonTest by getting {
             dependencies {
-                implementation(kotlin("test"))
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+                implementation(libs.kotlin.test)
+                implementation(libs.kotlinx.coroutines.test)
             }
         }
         val androidMain by getting {
             dependencies {
-                implementation("androidx.core:core-ktx:1.12.0")
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+                implementation(libs.androidx.core.ktx)
+                implementation(libs.kotlinx.coroutines.android)
             }
         }
 
-        // iOS source sets
         val iosX64Main by getting
         val iosArm64Main by getting
         val iosSimulatorArm64Main by getting
@@ -63,7 +59,7 @@ kotlin {
 
 android {
     namespace = "com.colormixlab.shared"
-    compileSdk = 34
+    compileSdk = 35
     defaultConfig {
         minSdk = 24
     }

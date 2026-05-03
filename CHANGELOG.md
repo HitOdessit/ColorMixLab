@@ -14,7 +14,7 @@ All notable changes to this project are documented in this file. The format is b
 - Spotless + ktlint formatting via `./gradlew spotlessCheck` / `spotlessApply`
 - Kover code coverage with Codecov upload in CI
 - `.editorconfig` for consistent formatting across editors
-- `SECURITY.md`, `CODE_OF_CONDUCT.md`, PR template, and Issue template config
+- `SECURITY.md`, PR template, and Issue template config
 - Dependabot weekly Gradle + GitHub Actions updates
 - CodeQL workflow for Kotlin/Java security scanning
 - Release workflow that builds and publishes APKs on tag push

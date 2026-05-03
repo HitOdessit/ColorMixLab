@@ -53,6 +53,11 @@ xcuserdata/
 # OS
 .DS_Store
 
+# Media (demos, captures — host externally rather than committing)
+*.mp4
+*.mov
+*.gif
+
 # Misc
 *.log
 *.swp

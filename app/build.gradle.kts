@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kover)
+    alias(libs.plugins.paparazzi)
 }
 
 android {
@@ -13,7 +14,7 @@ android {
         applicationId = "com.colormixlab"
         minSdk = 24
         targetSdk = 35
-        versionCode = 44
+        versionCode = 45
         versionName = "1.0.${versionCode}"
 
         vectorDrawables {

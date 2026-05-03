@@ -1,10 +1,14 @@
 name: Release Drafter
 
+# Trigger on push to master only. The previous `pull_request` trigger ran on
+# every Dependabot PR with the restricted GITHUB_TOKEN those workflows get,
+# which doesn't have `contents: write` — release-drafter then failed to update
+# the draft and surfaced as a red check on every Dependabot PR. Push events
+# from master have full token permissions and are sufficient: a release draft
+# only needs updating when commits actually land.
 on:
   push:
     branches: [ master ]
-  pull_request:
-    types: [opened, reopened, synchronize]
 
 permissions:
   contents: read

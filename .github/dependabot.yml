@@ -17,16 +17,15 @@ updates:
     labels:
       - dependencies
     ignore:
-      # AGP 9.x requires Gradle 9.4.1+. We're on Gradle 8.10. Bumping AGP and
-      # the Gradle wrapper is a coordinated upgrade that Dependabot can't do
-      # in a single PR (see closed PR #18). Pin to <9 until the joint bump
-      # is performed deliberately.
+      # AGP is fully ignored, not just majors. Even AGP minor bumps within 8.x
+      # raise the minimum Gradle wrapper version (closed #18: 9.x needs Gradle
+      # 9.4.1+; closed #19: 8.13.x needs Gradle 8.13+; we're on 8.10).
+      # Dependabot can't bump the wrapper in the same PR, so every AGP bump
+      # CI-fails on the version-check plugin. AGP, Gradle wrapper, and
+      # Compose UI move together — re-evaluate as a deliberate joint upgrade.
       - dependency-name: "com.android.application"
-        update-types: ["version-update:semver-major"]
       - dependency-name: "com.android.library"
-        update-types: ["version-update:semver-major"]
       - dependency-name: "com.android.tools.build:gradle"
-        update-types: ["version-update:semver-major"]
 
       # androidx.compose UI 1.9+ (pulled by recent compose-bom and any
       # androidx.* group bump) requires AGP 8.6+. Closed PRs #13, #14

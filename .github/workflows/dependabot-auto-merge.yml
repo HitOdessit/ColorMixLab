@@ -1,0 +1,40 @@
+name: Dependabot auto-merge
+
+# Auto-merges Dependabot PRs once their CI checks pass.
+#
+# The point: dramatically reduce the email firehose. Combined with the
+# version-pinned ignores in .github/dependabot.yml, the practical result is
+#   - Bumps that pass CI: silently auto-merged, single "merged" notification
+#   - Bumps that fail CI: stay open until manually closed, but the ignore
+#     rules in dependabot.yml minimize how often this happens
+#   - Major-version bumps: held back for human review (this workflow's `if`
+#     condition)
+#
+# `gh pr merge --auto` queues the merge for after required CI passes.
+# Auto-merge must be enabled on the repo (Settings → General → "Allow auto-merge").
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, ready_for_review]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    if: github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@08eff52bf64351f401fb50d4972fa95b9f2c2d1b  # v2.4.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Auto-merge non-major Dependabot updates
+        if: ${{ steps.metadata.outputs.update-type != 'version-update:semver-major' }}
+        run: gh pr merge --auto --squash "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

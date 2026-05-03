@@ -1,0 +1,72 @@
+# detekt configuration. Builds on detekt's default config (buildUponDefaultConfig = true).
+# Pragmatic settings for a Compose + KMP project.
+
+build:
+  maxIssues: 0
+  excludeCorrectable: false
+
+complexity:
+  LongMethod:
+    active: true
+    threshold: 80
+  LongParameterList:
+    active: true
+    functionThreshold: 8
+    constructorThreshold: 8
+    ignoreDefaultParameters: true
+    ignoreAnnotated: ['Composable']
+  TooManyFunctions:
+    active: true
+    thresholdInClasses: 25
+    thresholdInFiles: 25
+    ignoreDeprecated: true
+    ignorePrivate: true
+    ignoreOverridden: true
+  CyclomaticComplexMethod:
+    active: true
+    threshold: 20
+  NestedBlockDepth:
+    active: true
+    threshold: 5
+
+style:
+  MagicNumber:
+    active: false
+  ReturnCount:
+    active: true
+    max: 5
+  ForbiddenComment:
+    active: true
+    comments:
+      - reason: 'Forbidden TODO comment'
+        value: 'TODO:'
+      - reason: 'Forbidden FIXME comment'
+        value: 'FIXME:'
+  MaxLineLength:
+    active: false
+  WildcardImport:
+    active: false
+
+naming:
+  FunctionNaming:
+    active: true
+    functionPattern: '[a-zA-Z][a-zA-Z0-9]*'
+    excludes: ['**/*Test.kt']
+
+empty-blocks:
+  EmptyFunctionBlock:
+    active: true
+    ignoreOverridden: true
+
+exceptions:
+  TooGenericExceptionCaught:
+    active: false
+  SwallowedException:
+    active: false
+
+# Note: the `formatting` rule set lives in the separate detekt-formatting
+# plugin and is not loaded here. Spotless/ktlint handles formatting.
+
+potential-bugs:
+  UnsafeCallOnNullableType:
+    active: true

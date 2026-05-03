@@ -1,0 +1,59 @@
+# Built application files
+*.apk
+*.aar
+*.ap_
+*.aab
+
+# Files for the ART/Dalvik VM
+*.dex
+
+# Java class files
+*.class
+
+# Generated files
+bin/
+gen/
+out/
+
+# Gradle
+.gradle/
+build/
+
+# Local configuration
+local.properties
+
+# Android Studio / IntelliJ
+*.iml
+.idea/
+captures/
+
+# NDK
+obj/
+.externalNativeBuild/
+.cxx/
+
+# Keystore files
+*.jks
+*.keystore
+
+# Xcode
+xcuserdata/
+*.xcuserstate
+*.pbxproj.bak
+
+# iOS build output
+*.framework
+
+# Kotlin metadata
+.kotlin/
+
+# Claude Code
+.claude/
+
+# OS
+.DS_Store
+
+# Misc
+*.log
+*.swp
+*~

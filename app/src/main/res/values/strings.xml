@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Color Mix Lab</string>
+    <string name="level_text">Level %1$d</string>
+    <string name="target_color">Target Color</string>
+    <string name="mixing_bowl">Mixing Bowl</string>
+    <string name="clear_bowl">Clear Bowl</string>
+    <string name="check_match">Check Match!</string>
+    <string name="success">Success!</string>
+    <string name="try_again">Try Again</string>
+    <string name="drops">%1$d drops</string>
+    <string name="color_red">Red</string>
+    <string name="color_blue">Blue</string>
+    <string name="color_yellow">Yellow</string>
+    <string name="color_orange">Orange</string>
+    <string name="color_green">Green</string>
+    <string name="color_purple">Purple</string>
+</resources>
+

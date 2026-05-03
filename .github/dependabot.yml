@@ -1,0 +1,56 @@
+version: 2
+updates:
+  - package-ecosystem: gradle
+    directory: "/"
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 3
+    labels:
+      - dependencies
+    ignore:
+      # Pulls Compose UI 1.9+, which requires Android Gradle Plugin 8.6+.
+      # Re-enable after AGP is bumped from 8.3.0.
+      - dependency-name: "androidx.compose:compose-bom"
+      - dependency-name: "androidx.activity:activity-compose"
+      - dependency-name: "androidx.lifecycle:*"
+      - dependency-name: "androidx.core:core-ktx"
+      # Kotlin 2.1+ moved Clock to kotlin.time, so kotlinx.datetime 0.7+
+      # breaks current commonMain Clock.System usages. Re-enable after the
+      # source migration to kotlin.time.Clock.
+      - dependency-name: "org.jetbrains.kotlin:*"
+      - dependency-name: "org.jetbrains.kotlinx:kotlinx-datetime"
+    groups:
+      kotlin:
+        patterns:
+          - "org.jetbrains.kotlin*"
+          - "org.jetbrains.kotlinx*"
+      androidx:
+        patterns:
+          - "androidx.*"
+      compose:
+        patterns:
+          - "androidx.compose*"
+      testing:
+        patterns:
+          - "junit*"
+          - "*kotlin-test*"
+          - "*coroutines-test*"
+      tooling:
+        patterns:
+          - "*detekt*"
+          - "*spotless*"
+          - "*kover*"
+          - "*ktlint*"
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 2
+    labels:
+      - dependencies
+      - github-actions
+    groups:
+      actions:
+        patterns:
+          - "*"

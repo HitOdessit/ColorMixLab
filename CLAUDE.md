@@ -51,12 +51,13 @@ ColorMixLab is a Kotlin Multiplatform (KMP) color-mixing game targeting Android 
 
 Tests live in `app/src/test/` and run via the Android JUnit runner. Coverage spans:
 
-- `GameController` (25 tests) — game flow, scoring, timer, math gating
-- `LeaderboardManager` (14 tests) — CRUD, ranking, time windows, corruption recovery
+- `GameController` (27 tests) — game flow, scoring, timer, math gating
+- `LeaderboardManager` (15 tests) — CRUD, ranking, time windows, corruption recovery
 - `ColorMixer` (15 tests) — averaging, similarity properties
 - `LevelManager` (18 tests) — complexity scaling, variety
-- `MathQuestionGenerator` (15 tests) — invariants, distractor quality
-- `GameState`, `LeaderboardEntry`, `MathChallengeTimer` (40+ tests)
+- `MathQuestionGenerator` (17 tests) — invariants, distractor quality
+- `GameState`, `LeaderboardEntry`, `MathChallengeTimer` (48 tests)
+- `SnapshotTests` (11 Paparazzi snapshots)
 
 Run with `./gradlew test`. Coverage report via `./gradlew koverHtmlReport`.
 

@@ -123,12 +123,13 @@ This means two playthroughs at the same difficulty have different palettes. Same
 
 Unit tests live in `app/src/test/` and run via the Android test runner. Coverage spans:
 
-- `GameController` — game flow, scoring, timer, math challenges (25 tests)
-- `LeaderboardManager` — CRUD, ranking, time-window queries (14 tests)
+- `GameController` — game flow, scoring, timer, math challenges (27 tests)
+- `LeaderboardManager` — CRUD, ranking, time-window queries (15 tests)
 - `ColorMixer` — averaging, similarity (15 tests)
 - `LevelManager` — target generation, complexity scaling (18 tests)
-- `MathQuestionGenerator` — question structure, distractor quality (15 tests)
-- `GameState`, `LeaderboardEntry`, `MathChallengeTimer` — defaults, sorting, serialization, configuration (40+ tests)
+- `MathQuestionGenerator` — question structure, distractor quality (17 tests)
+- `GameState`, `LeaderboardEntry`, `MathChallengeTimer` — defaults, sorting, serialization, configuration (48 tests)
+- `SnapshotTests` — Paparazzi visual regression (11 snapshots)
 
 Run with `./gradlew test`. Coverage report via `./gradlew koverHtmlReport` (output in `build/reports/kover/html/`).
 

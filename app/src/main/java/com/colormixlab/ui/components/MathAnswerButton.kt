@@ -15,9 +15,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.colormixlab.ui.theme.ColorMixLabTheme
 
 /**
  * Answer button component for math challenge dialogs.
@@ -171,4 +173,52 @@ private fun BoxScope.FeedbackIcon(
             .padding(2.dp)
             .size(iconSize)
     )
+}
+
+@Preview(name = "MathAnswer — idle", showBackground = true, widthDp = 120, heightDp = 80)
+@Composable
+private fun MathAnswerButtonIdlePreview() {
+    ColorMixLabTheme {
+        MathAnswerButton(
+            answer = 42,
+            isCorrect = false,
+            isSelected = false,
+            showingAnswer = false,
+            fontSize = 32.sp,
+            modifier = Modifier.fillMaxSize(),
+            onClick = {}
+        )
+    }
+}
+
+@Preview(name = "MathAnswer — correct selected", showBackground = true, widthDp = 120, heightDp = 80)
+@Composable
+private fun MathAnswerButtonCorrectPreview() {
+    ColorMixLabTheme {
+        MathAnswerButton(
+            answer = 42,
+            isCorrect = true,
+            isSelected = true,
+            showingAnswer = true,
+            fontSize = 32.sp,
+            modifier = Modifier.fillMaxSize(),
+            onClick = {}
+        )
+    }
+}
+
+@Preview(name = "MathAnswer — wrong selected", showBackground = true, widthDp = 120, heightDp = 80)
+@Composable
+private fun MathAnswerButtonWrongPreview() {
+    ColorMixLabTheme {
+        MathAnswerButton(
+            answer = 41,
+            isCorrect = false,
+            isSelected = true,
+            showingAnswer = true,
+            fontSize = 32.sp,
+            modifier = Modifier.fillMaxSize(),
+            onClick = {}
+        )
+    }
 }

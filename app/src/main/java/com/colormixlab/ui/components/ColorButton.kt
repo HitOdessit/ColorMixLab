@@ -16,9 +16,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.colormixlab.model.GameColor
+import com.colormixlab.ui.theme.ColorMixLabTheme
 import com.colormixlab.utils.toComposeColor
 
 @Composable
@@ -97,3 +99,18 @@ fun ColorButton(
     }
 }
 
+@Preview(name = "ColorButton — no drops", showBackground = true)
+@Composable
+private fun ColorButtonNoDropsPreview() {
+    ColorMixLabTheme {
+        ColorButton(color = GameColor.Red, dropCount = 0, onClick = {})
+    }
+}
+
+@Preview(name = "ColorButton — with badge", showBackground = true)
+@Composable
+private fun ColorButtonWithBadgePreview() {
+    ColorMixLabTheme {
+        ColorButton(color = GameColor.Blue, dropCount = 3, onClick = {})
+    }
+}

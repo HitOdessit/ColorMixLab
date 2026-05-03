@@ -17,10 +17,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.colormixlab.model.GameColor
 import com.colormixlab.model.PlatformColor
+import com.colormixlab.ui.theme.ColorMixLabTheme
 import com.colormixlab.utils.toComposeColor
 import kotlinx.coroutines.launch
 import kotlin.math.sqrt
@@ -195,3 +197,28 @@ fun MixingBowl(
     }
 }
 
+@Preview(name = "Empty bowl", showBackground = true)
+@Composable
+private fun MixingBowlEmptyPreview() {
+    ColorMixLabTheme {
+        MixingBowl(
+            drops = emptyMap(),
+            mixedColor = PlatformColor.White
+        )
+    }
+}
+
+@Preview(name = "Three colors mixed", showBackground = true)
+@Composable
+private fun MixingBowlThreeColorsPreview() {
+    ColorMixLabTheme {
+        MixingBowl(
+            drops = mapOf(
+                GameColor.Red to 2,
+                GameColor.Blue to 1,
+                GameColor.Yellow to 1
+            ),
+            mixedColor = PlatformColor(150, 90, 60)
+        )
+    }
+}

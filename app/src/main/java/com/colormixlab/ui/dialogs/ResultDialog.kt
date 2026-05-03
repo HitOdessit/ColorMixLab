@@ -5,12 +5,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -18,6 +18,7 @@ import com.colormixlab.game.GameConstants
 import com.colormixlab.model.GameColor
 import com.colormixlab.ui.components.ConfettiEffect
 import com.colormixlab.ui.components.SparkleEffect
+import com.colormixlab.ui.theme.ColorMixLabTheme
 import com.colormixlab.utils.toComposeColor
 
 /**
@@ -54,129 +55,33 @@ fun ResultDialog(
     getMessage: (Float) -> String,
     getEmoji: (Float) -> String
 ) {
-    // Calculate display values
-    val message = remember(similarity) { getMessage(similarity) }
-    val emoji = remember(similarity) { getEmoji(similarity) }
-    val percentage = remember(similarity) { (similarity * 100).toInt() }
-    val totalPoints = basePoints + timeBonus
-
-    // Determine if a new color is being unlocked
-    // Colors unlock at levels 4, 7, 10, 13, 16, 19 (after completing levels 3, 6, 9, 12, 15, 18)
-    val newlyUnlockedColor = remember(level, unlockedColors) {
-        if (isSuccess && (level + 1) in GameConstants.COLOR_UNLOCK_LEVELS) {
-            val nextLevel = level + 1
-            GameColor.getAllColors().find { it.unlockLevel == nextLevel }
-        } else {
-            null
-        }
-    }
-
     Dialog(onDismissRequest = { /* Prevent dismissal */ }) {
         Box(modifier = Modifier.fillMaxWidth(0.98f)) {
             // Celebration effects
             when {
                 similarity >= 1.0f -> {
-                    // Perfect match - show confetti
                     androidx.compose.runtime.key("confetti-$level") {
                         ConfettiEffect(modifier = Modifier.fillMaxSize())
                     }
                 }
                 similarity >= 0.80f && isSuccess -> {
-                    // High score - show sparkles
                     androidx.compose.runtime.key("sparkle-$level") {
                         SparkleEffect(modifier = Modifier.fillMaxSize())
                     }
                 }
             }
 
-            // Main result card
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 16.dp),
-                shape = RoundedCornerShape(28.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 32.dp, vertical = 40.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(20.dp)
-                ) {
-                    // Result emoji
-                    Text(
-                        text = emoji,
-                        fontSize = 60.sp,
-                        textAlign = TextAlign.Center
-                    )
-
-                    // Result message
-                    Text(
-                        text = message,
-                        fontSize = 36.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = if (isSuccess) MaterialTheme.colorScheme.primary else Color(0xFFF44336),
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    // Similarity percentage
-                    Text(
-                        text = "Similarity: $percentage%",
-                        fontSize = 24.sp,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontWeight = FontWeight.Medium,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth(),
-                        maxLines = 1
-                    )
-
-                    // Points breakdown
-                    PointsBreakdown(
-                        basePoints = basePoints,
-                        timeBonus = timeBonus,
-                        totalPoints = totalPoints
-                    )
-
-                    // Level completion message
-                    Text(
-                        text = if (isSuccess) "Level $level Complete!" else "Try Level $level Again",
-                        fontSize = 20.sp,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    // Color unlock notification
-                    newlyUnlockedColor?.let { color ->
-                        ColorUnlockNotification(color)
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // Action button
-                    Button(
-                        onClick = if (isSuccess) onNextLevel else onRetry,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(64.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isSuccess) MaterialTheme.colorScheme.primary else Color(0xFFF44336)
-                        )
-                    ) {
-                        Text(
-                            text = if (isSuccess) "Next Level →" else "Try Again",
-                            fontSize = 26.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-            }
+            ResultDialogContent(
+                similarity = similarity,
+                isSuccess = isSuccess,
+                level = level,
+                basePoints = basePoints,
+                timeBonus = timeBonus,
+                unlockedColors = unlockedColors,
+                getMessage = getMessage,
+                getEmoji = getEmoji,
+                onAction = if (isSuccess) onNextLevel else onRetry
+            )
         }
     }
 }
@@ -223,6 +128,146 @@ private fun PointsBreakdown(
                 textAlign = TextAlign.Center
             )
         }
+    }
+}
+
+/**
+ * Snapshot-friendly inline rendering of the result card content (no `Dialog`
+ * wrapper). Used for `@Preview` and Paparazzi snapshot tests; the production
+ * call site wraps this content in a `Dialog`.
+ */
+@Composable
+internal fun ResultDialogContent(
+    similarity: Float,
+    isSuccess: Boolean,
+    level: Int,
+    basePoints: Int,
+    timeBonus: Int,
+    unlockedColors: List<GameColor>,
+    getMessage: (Float) -> String,
+    getEmoji: (Float) -> String,
+    onAction: () -> Unit
+) {
+    val message = getMessage(similarity)
+    val emoji = getEmoji(similarity)
+    val percentage = (similarity * 100).toInt()
+    val totalPoints = basePoints + timeBonus
+
+    val newlyUnlockedColor = if (isSuccess && (level + 1) in GameConstants.COLOR_UNLOCK_LEVELS) {
+        val nextLevel = level + 1
+        GameColor.getAllColors().find { it.unlockLevel == nextLevel }
+    } else {
+        null
+    }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 16.dp),
+        shape = RoundedCornerShape(28.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 32.dp, vertical = 40.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(20.dp)
+        ) {
+            Text(
+                text = emoji,
+                fontSize = 60.sp,
+                textAlign = TextAlign.Center
+            )
+            Text(
+                text = message,
+                fontSize = 36.sp,
+                fontWeight = FontWeight.Bold,
+                color = if (isSuccess) MaterialTheme.colorScheme.primary else Color(0xFFF44336),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Text(
+                text = "Similarity: $percentage%",
+                fontSize = 24.sp,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.Medium,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+                maxLines = 1
+            )
+            PointsBreakdown(
+                basePoints = basePoints,
+                timeBonus = timeBonus,
+                totalPoints = totalPoints
+            )
+            Text(
+                text = if (isSuccess) "Level $level Complete!" else "Try Level $level Again",
+                fontSize = 20.sp,
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+            newlyUnlockedColor?.let { color ->
+                ColorUnlockNotification(color)
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(
+                onClick = onAction,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(64.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (isSuccess) MaterialTheme.colorScheme.primary else Color(0xFFF44336)
+                )
+            ) {
+                Text(
+                    text = if (isSuccess) "Next Level →" else "Try Again",
+                    fontSize = 26.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    }
+}
+
+@Preview(name = "ResultDialog — success, no unlock", showBackground = true, widthDp = 380, heightDp = 720)
+@Composable
+private fun ResultDialogSuccessPreview() {
+    ColorMixLabTheme {
+        ResultDialogContent(
+            similarity = 0.92f,
+            isSuccess = true,
+            level = 2,
+            basePoints = 120,
+            timeBonus = 25,
+            unlockedColors = listOf(GameColor.Red, GameColor.Blue, GameColor.Green),
+            getMessage = { "Great Match!" },
+            getEmoji = { "🎉" },
+            onAction = {}
+        )
+    }
+}
+
+@Preview(name = "ResultDialog — failure", showBackground = true, widthDp = 380, heightDp = 720)
+@Composable
+private fun ResultDialogFailurePreview() {
+    ColorMixLabTheme {
+        ResultDialogContent(
+            similarity = 0.62f,
+            isSuccess = false,
+            level = 5,
+            basePoints = -25,
+            timeBonus = 0,
+            unlockedColors = listOf(GameColor.Red, GameColor.Blue, GameColor.Green, GameColor.Yellow),
+            getMessage = { "Not quite — try again" },
+            getEmoji = { "😅" },
+            onAction = {}
+        )
     }
 }
 

@@ -1,5 +1,7 @@
 # Math Times Tables Challenge - Implementation Complete
 
+> _Preserved as-is from the AI build journey. Claims here are point-in-time; see [ROADMAP](../../ROADMAP.md) for currently measured status._
+
 ## Overview
 Successfully implemented a comprehensive math times tables challenge system that integrates with the ColorMixLab game. Players must answer multiplication questions before starting the game and at key progression points.
 

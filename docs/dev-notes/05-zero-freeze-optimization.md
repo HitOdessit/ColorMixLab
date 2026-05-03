@@ -1,5 +1,7 @@
 # Aggressive Performance Optimization - Zero Freezes
 
+> _Preserved as-is from the AI build journey. Claims here are point-in-time; see [ROADMAP](../../ROADMAP.md) for currently measured status._
+
 ## Problem
 
 Animation still had **periodic freezes every second or so** despite previous optimizations.

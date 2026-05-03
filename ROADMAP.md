@@ -65,7 +65,7 @@ The iOS `GameViewModel` re-implements behavior that already exists in the shared
 
 ### Performance benchmarks
 
-Macrobenchmark module measuring app startup, frame timing during gameplay, and the 10-second celebration animation. Numbers belong in the README, replacing the current "60fps" claim with measured percentiles.
+Macrobenchmark module measuring app startup, frame timing during gameplay, and the 10-second celebration animation. The project currently relies on observed visual smoothness on test devices rather than measured percentiles; a benchmark module would close that gap if the project ever needs verifiable perf numbers.
 
 ### Release distribution
 

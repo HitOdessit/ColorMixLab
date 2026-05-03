@@ -1,5 +1,7 @@
 # ColorMixLab Code Refactoring - Complete Summary
 
+> _Preserved as-is from the AI build journey. Claims here are point-in-time; see [ROADMAP](../../ROADMAP.md) for currently measured status._
+
 ## 🎯 Refactoring Goals Achieved
 
 ✅ **Reduced code complexity** - Broke down large files into focused components

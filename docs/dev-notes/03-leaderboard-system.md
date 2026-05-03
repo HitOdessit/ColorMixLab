@@ -1,5 +1,7 @@
 # Leaderboard System Implementation
 
+> _Preserved as-is from the AI build journey. Claims here are point-in-time; see [ROADMAP](../../ROADMAP.md) for currently measured status._
+
 ## Overview
 A complete local leaderboard system has been implemented for ColorMixLab, featuring a 30-level game limit, nickname entry, and persistent local storage.
 

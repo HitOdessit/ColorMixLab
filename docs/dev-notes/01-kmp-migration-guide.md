@@ -1,5 +1,7 @@
 # ColorMixLab - Kotlin Multiplatform Migration Guide
 
+> _Preserved as-is from the AI build journey. Claims here are point-in-time; see [ROADMAP](../../ROADMAP.md) for currently measured status._
+
 ## Overview
 
 This document outlines the KMP (Kotlin Multiplatform) migration for ColorMixLab, allowing the game to run on both Android and iOS with ~80% shared code.

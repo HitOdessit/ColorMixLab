@@ -15,3 +15,4 @@ Format: [Michael Nygard's template](https://cognitect.com/blog/2011/11/15/docume
 | [0003](0003-ios-stateflow-polling-bridge.md) | Bridge Kotlin StateFlow to SwiftUI via 100ms polling | Accepted |
 | [0004](0004-drawscope-particle-rendering.md) | Render celebration particles directly in `DrawScope` | Accepted |
 | [0005](0005-sealed-screen-routing.md) | Sealed `Screen` hierarchy for top-level navigation | Accepted |
+| [0006](0006-r8-proguard-disabled.md) | Disable R8 / ProGuard for hobby distribution | Accepted |

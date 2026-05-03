@@ -1,5 +1,7 @@
 # ColorMixLab - Automated Test Suite
 
+> _Preserved as-is from the AI build journey. Claims here are point-in-time; see [ROADMAP](../../ROADMAP.md) for currently measured status._
+
 ## 📋 Overview
 
 Comprehensive unit tests have been added to ensure code quality and catch regressions early. The test suite focuses on critical business logic, utilities, and state management.

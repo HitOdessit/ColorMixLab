@@ -1,5 +1,7 @@
 # Celebration Animation Performance Optimization
 
+> _Preserved as-is from the AI build journey. Claims here are point-in-time; see [ROADMAP](../../ROADMAP.md) for currently measured status._
+
 ## Overview
 Completely redesigned and optimized the game completion celebration animation for smooth, lag-free performance with a beautiful morphing transition effect.
 

@@ -1,3 +1,12 @@
+# Dependabot configuration.
+#
+# Each ignore rule below documents *why* it exists. The point is to break
+# Dependabot's monthly cycle of re-proposing bumps that we already evaluated
+# and rejected for a coordination reason — without permanently freezing
+# anything that's safe to flow.
+#
+# When the underlying blocker is resolved (AGP bumped, Kotlin Clock migration
+# done), remove the corresponding ignore.
 version: 2
 updates:
   - package-ecosystem: gradle
@@ -8,39 +17,49 @@ updates:
     labels:
       - dependencies
     ignore:
-      # Pulls Compose UI 1.9+, which requires Android Gradle Plugin 8.6+.
-      # Re-enable after AGP is bumped from 8.3.0.
+      # AGP 9.x requires Gradle 9.4.1+. We're on Gradle 8.10. Bumping AGP and
+      # the Gradle wrapper is a coordinated upgrade that Dependabot can't do
+      # in a single PR (see closed PR #18). Pin to <9 until the joint bump
+      # is performed deliberately.
+      - dependency-name: "com.android.application"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "com.android.library"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "com.android.tools.build:gradle"
+        update-types: ["version-update:semver-major"]
+
+      # androidx.compose UI 1.9+ (pulled by recent compose-bom and any
+      # androidx.* group bump) requires AGP 8.6+. Closed PRs #13, #14
+      # documented this. Re-enable after AGP is bumped.
       - dependency-name: "androidx.compose:compose-bom"
+      - dependency-name: "androidx.compose.*"
       - dependency-name: "androidx.activity:activity-compose"
       - dependency-name: "androidx.lifecycle:*"
       - dependency-name: "androidx.core:core-ktx"
-      # Kotlin 2.1+ moved Clock to kotlin.time, so kotlinx.datetime 0.7+
-      # breaks current commonMain Clock.System usages. Re-enable after the
+
+      # kotlinx-datetime 0.7+ removes Clock.System; commonMain still imports
+      # kotlinx.datetime.Clock directly (GameController.kt, LeaderboardEntry.kt,
+      # LeaderboardManager.kt — see closed PR #12). Re-enable after the
       # source migration to kotlin.time.Clock.
-      - dependency-name: "org.jetbrains.kotlin:*"
       - dependency-name: "org.jetbrains.kotlinx:kotlinx-datetime"
+
     groups:
       kotlin:
         patterns:
           - "org.jetbrains.kotlin*"
           - "org.jetbrains.kotlinx*"
-      androidx:
-        patterns:
-          - "androidx.*"
-      compose:
-        patterns:
-          - "androidx.compose*"
-      testing:
-        patterns:
-          - "junit*"
-          - "*kotlin-test*"
-          - "*coroutines-test*"
+        # kotlinx-datetime is excluded by the per-package ignore above.
       tooling:
         patterns:
           - "*detekt*"
           - "*spotless*"
           - "*kover*"
           - "*ktlint*"
+          - "app.cash.paparazzi*"
+      testing:
+        patterns:
+          - "junit*"
+          - "*kotlin-test*"
 
   - package-ecosystem: github-actions
     directory: "/"

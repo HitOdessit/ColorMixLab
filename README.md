@@ -14,13 +14,15 @@
 
 ## Demo
 
-3:33 walkthrough showing color mixing, math gates, tier unlocks, and the end-game celebration.
+45-second highlight — color mixing, math gates, tier unlocks, and the end-game celebration:
 
-<video src="https://github.com/HitOdessit/ColorMixLab/releases/download/demo_v1/colormixlab-demo.mp4" controls width="600">
-  Your browser does not support inline video.
-  <a href="https://github.com/HitOdessit/ColorMixLab/releases/download/demo_v1/colormixlab-demo.mp4">Download the demo (23 MB MP4)</a>
-  or view it on the <a href="https://github.com/HitOdessit/ColorMixLab/releases/tag/demo_v1">release page</a>.
-</video>
+https://github.com/user-attachments/assets/2edae4f7-a96b-4251-877e-e8045edd4718
+
+For the full 3:33 walkthrough, click the poster:
+
+[<img src="docs/assets/demo-poster.jpg" alt="Click to watch the full 3:33 walkthrough" width="240">](https://github.com/HitOdessit/ColorMixLab/releases/download/demo_v1/colormixlab-demo.mp4)
+
+<sub>23 MB MP4 · also on the [release page](https://github.com/HitOdessit/ColorMixLab/releases/tag/demo_v1)</sub>
 
 ## How to read this repo
 

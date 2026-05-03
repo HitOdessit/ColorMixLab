@@ -1,88 +1,79 @@
 # Roadmap
 
-This document tracks high-value work that's not done yet. Items are not promises; they're known opportunities ranked by value.
+This document covers what's deliberately scoped *out* of v1, what's intentionally on the back burner, and what's a credible next step. It is not a feature wishlist.
 
-## In scope
+The repo is a portfolio piece demonstrating end-to-end AI-assisted mobile development. v1's bar is *"a working cross-platform game with credible engineering practices, no production polish."* Items below are sorted by signal-to-effort ratio for that bar.
 
-### Continue KMP extraction
+## Deliberate scope decisions in v1
 
-Today, the `shared/` module contains ~1,000 LOC of game logic. The Android app has ~4,500 LOC of Compose UI and the iOS app has ~2,000 LOC of SwiftUI — meaning **only ~13-18% of cross-platform code is actually shared**. The KMP migration started but did not complete.
+These are calls made on purpose, not gaps to fill.
 
-Specific extraction opportunities:
-- **MathChallengeState orchestration.** Currently lives partly in shared (`MathQuestionGenerator`) and partly in platform view models. Move the full challenge flow (question sequencing, correct/wrong handling, auto-advance timing) into a shared `MathChallengeController`.
-- **Layout-agnostic UI state.** The Compose `GameLayouts` and SwiftUI screen state could share a common "view-state" projection in `commonMain`, reducing duplication.
-- **iOS view model duplication.** `iosApp/.../GameViewModel.swift` re-implements logic that already exists in shared `GameController` (state extension methods, force-cast Kotlin collections). Most of this could be deleted.
+### Native UI on each platform, not Compose Multiplatform UI
 
-### Tablet support on iOS
+Game logic shipped to `commonMain` (~1,000 LOC). UI did not. The Android app is Jetpack Compose; the iOS app is SwiftUI; both observe the same `StateFlow<GameState>` from shared.
 
-The iOS app has **zero iPad-specific layouts**. There are no references to `UIDevice.userInterfaceIdiom`, `horizontalSizeClass`, or any other iPad-detection mechanism. On iPad, the app likely renders the iPhone layout scaled up — functional but not polished.
+Why: the goal was native platform feel — Material 3 motion on Android, SwiftUI animation primitives on iOS — not a single shared rendering layer. Compose-on-iOS is maturing but still imposes cost on animation fidelity and platform-idiomatic gesture handling. KMP is the right tool when shared logic + native UI is the goal; if shared rendering were the goal, Flutter or Compose Multiplatform would have been chosen instead.
 
-What's needed:
-- Detect iPad via `@Environment(\.horizontalSizeClass)` in SwiftUI.
-- Mirror the Android `LandscapeGameLayout` / tablet adaptations on iOS.
-- Test on iPad simulator and verify the math challenge grid and color palette adapt.
+The result is that ~13–18% of total LOC is shared today. That's the intended ratio for this scope, not a missed target.
+
+### iOS state observation via 100ms polling, not SKIE
+
+Bridging Kotlin `StateFlow` to SwiftUI cleanly requires [SKIE](https://skie.touchlab.co/) or [KMP-NativeCoroutines](https://github.com/rickclephas/KMP-NativeCoroutines). Both add Gradle plugin and compiler-plugin complexity. For a turn-based color-mixing game, a `Timer.publish(every: 0.1)` polling `gameController.gameState.value` is well below the perception threshold and adds zero dependencies. Documented in [ADR-0003](docs/adr/0003-ios-stateflow-polling-bridge.md).
+
+If the number of `StateFlow`s grows, or if real-time UI requirements emerge, switch to SKIE.
+
+### Local leaderboard, no server, no accounts
+
+No backend, no PII, no analytics, no sign-in. The leaderboard is `NSUserDefaults` / `SharedPreferences`. This is a feature, not a gap — it keeps the app fully offline-verifiable from the manifest.
+
+### Single-language UI
+
+All user-facing strings are English. Localization machinery (Android string resources, iOS string catalogs) is not exercised in v1. Adding one additional language is a credible next step for a real product; for a portfolio piece showcasing KMP and animation it would be ceremony.
+
+## Acknowledged trade-offs (not done in v1)
+
+These are real gaps a working engineer would close before shipping commercially. Listed honestly so reviewers don't have to find them.
 
 ### Sound effects
 
-`SoundProvider` exists in the shared module with `expect` declarations and platform `actual` classes — but the actual implementations have all `loadSound` calls commented out. The Android `SoundManager` falls back to system sounds with a `// For now, we'll use system sounds as placeholders` comment. Result: the app is silent.
-
-What's needed:
-- Source or generate sound effect files (drop sound, match success, level complete, math correct/wrong, timer warning).
-- Add files to `app/src/main/res/raw/` and bundle in iOS app resources.
-- Uncomment and wire up the `loadSound` calls in `androidMain` and `iosMain` `SoundProvider` actuals.
+`SoundProvider` exists with `expect`/`actual` declarations. The actual implementations have `loadSound` calls commented out and the app falls back to system sounds. Closing this is mostly content (sourcing sound files) and uncommenting the wired calls.
 
 ### iOS test target
 
-There are **zero iOS unit tests**. The shared module is tested via the Android test runner (which covers the shared logic), but iOS-specific code (`GameStateExtensions.swift`, the polling bridge, custom `==` operator, `LeaderboardViewModel`) is uncovered.
+Shared module logic is covered by the Android JUnit runner (100+ tests). iOS-specific code — `GameStateExtensions.swift`, the polling bridge, `LeaderboardViewModel`, the custom `==` operator — has no test target. Adding an `iosAppTests` Xcode target is straightforward; it's been deferred because shared-logic coverage already addresses the highest-risk surface.
 
-What's needed:
-- Add an `iosAppTests` Xcode target.
-- Test the Kotlin↔Swift bridge: confirm state transitions propagate, the `==` operator covers all state-affecting fields, `getCurrentMathChallenge` doesn't crash on null.
-- Optionally: a `commonTest` source set in the shared module with multi-platform tests.
+### R8 / ProGuard
 
-### ProGuard / R8 rules
+Release builds have `isMinifyEnabled = false` and `proguard-rules.pro` is empty. The release APK is identical in size to the debug APK. Enabling R8 and adding rules for `kotlinx.serialization` (`LeaderboardEntry` is `@Serializable`) is a 1–2 hour task. Typical APK reduction: 20–40%.
 
-Release builds have `isMinifyEnabled = false` and `proguard-rules.pro` is empty. The release APK is therefore identical in size to the debug APK and has no shrinking, optimization, or obfuscation.
+### iPad-specific layouts on iOS
 
-What's needed:
-- Enable `isMinifyEnabled = true` for release.
-- Add ProGuard rules for `kotlinx.serialization` (the `LeaderboardEntry` `@Serializable` class has reflective access from the JSON encoder).
-- Verify the release APK still works after R8 strips unused code.
-- Measure APK size delta — typically 20-40% reduction.
+The iOS app has no `horizontalSizeClass` or `UIDevice.userInterfaceIdiom` checks. On iPad, the iPhone layout scales up — functional but not polished. Android already has `LandscapeGameLayout` / tablet adaptations; mirroring that on iOS is the work.
 
-## Stretch / nice-to-have
+### Expand snapshot test coverage
 
-### Compose `@Preview` annotations
+`@Preview` annotations and Paparazzi snapshot tests now exist for `MixingBowl`, `ColorButton`, `TargetColor`, `MathAnswerButton`, and `ResultDialogContent` — see [docs/snapshot-tests.md](docs/snapshot-tests.md). The next step is screen-level snapshots (`GameScreen`, `IntroScreen`, `MathChallengeScreen`), which require a `ViewModel` test seam not yet exposed.
 
-No Compose composables have `@Preview`. Adding previews to key composables (`MixingBowl`, `ColorButton`, `ResultDialog`, `MathChallengeLayout`) would speed up UI iteration.
+## Next-step extractions (when picking this up again)
 
-### Replace iOS polling bridge with SKIE
+### Continue moving logic to `commonMain`
 
-[ADR-0003](docs/adr/0003-ios-stateflow-polling-bridge.md) documents the trade-off. Re-evaluate if the number of `StateFlow`s grows or real-time UI requirements emerge.
+The iOS `GameViewModel` re-implements behavior that already exists in the shared `GameController` (state extension methods, force-cast Kotlin collections, `==` overrides). Most of this could be deleted or pushed down. Concrete targets:
 
-### Compose Multiplatform UI for the iPad layout
-
-Compose-on-iOS is maturing. For the iPad layout specifically (which doesn't exist yet), we could write it once in Compose Multiplatform instead of writing SwiftUI.
-
-### F-Droid / Play Store metadata
-
-Add `fastlane/metadata/android/en-US/` with proper store descriptions, changelogs, and screenshots. Even without publishing, this signals production-readiness.
+- **Math challenge orchestration.** `MathQuestionGenerator` is shared; the challenge flow (question sequencing, correct/wrong handling, auto-advance timing) lives partly in the platform view models. Consolidate into a `MathChallengeController` in shared.
+- **Layout-agnostic view-state.** A common "view-state" projection in `commonMain` would let both platforms observe a UI-shaped struct rather than re-deriving it.
 
 ### Performance benchmarks
 
-Add a Macrobenchmark module measuring app startup, frame timing during gameplay, and the celebration animation. Publish numbers in the README.
+Macrobenchmark module measuring app startup, frame timing during gameplay, and the 10-second celebration animation. Numbers belong in the README, replacing the current "60fps" claim with measured percentiles.
 
-### Localization
+### Release distribution
 
-All user-facing strings are English. Adding even one additional language demonstrates Android string-resource and iOS string-catalog discipline.
-
-### Analytics / telemetry (opt-in)
-
-For a portfolio piece, intentionally avoiding analytics is a feature. If this ever moved to a real product, opt-in telemetry with proper privacy controls would be added here.
+A signed APK on GitHub Releases (the workflow exists; needs a keystore) and a TestFlight build for iOS. Currently a recruiter has no way to play the game without building it from source.
 
 ## Out of scope
 
-- **Online multiplayer.** This is an offline single-player game by design.
-- **In-app purchases.** Same.
-- **Server-side leaderboard.** The local leaderboard is intentional — no accounts, no servers, no PII.
-- **Web (Compose Multiplatform Web).** Compose Multiplatform Web is too immature today; revisit when stable.
+- Online multiplayer
+- In-app purchases
+- Server-side leaderboard
+- Compose Multiplatform Web (too immature today; revisit when stable)

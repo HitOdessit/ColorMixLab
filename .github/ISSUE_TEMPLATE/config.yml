@@ -4,5 +4,5 @@ contact_links:
     url: https://github.com/HitOdessit/ColorMixLab/blob/master/README.md
     about: Build instructions, architecture, and feature overview.
   - name: AI Build Retrospective
-    url: https://github.com/HitOdessit/ColorMixLab/blob/master/CLAUDE.md
+    url: https://github.com/HitOdessit/ColorMixLab/blob/master/RETROSPECTIVE.md
     about: How this project was built end-to-end with Claude Code.

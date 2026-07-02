@@ -34,15 +34,20 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      # build-mode: none analyzes Kotlin/Java source directly without a Gradle
-      # build. This is GitHub's recommended mode for java-kotlin and keeps
-      # security scanning independent of build health — a broken build no
-      # longer takes CodeQL down with it.
+      # build-mode: manual with an explicit Gradle build. build-mode: none was
+      # tried and extracts zero source for this KMP layout ("no source code
+      # seen"), so we compile and let CodeQL trace the bytecode.
       - name: Initialize CodeQL
         uses: github/codeql-action/init@8aad20d150bbac5944a9f9d289da16a4b0d87c1e  # v4.36.2
         with:
           languages: ${{ matrix.language }}
-          build-mode: none
+          build-mode: manual
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92  # v6.2.0
+
+      - name: Build
+        run: ./gradlew :app:assembleDebug :shared:assembleDebug -x lint
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@8aad20d150bbac5944a9f9d289da16a4b0d87c1e  # v4.36.2

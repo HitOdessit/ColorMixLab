@@ -1,6 +1,9 @@
 [versions]
 agp = "8.3.0"
-kotlin = "2.4.0"
+# Pinned to 2.3.x: Kotlin Gradle Plugin 2.4.0+ enforces a minimum AGP of
+# 8.5.2, but AGP is frozen at 8.3.0 (see dependabot.yml). Bump together with
+# AGP as part of the joint AGP/Gradle/Compose upgrade.
+kotlin = "2.3.21"
 coroutines = "1.11.0"
 serialization-json = "1.11.0"
 datetime = "0.5.0"

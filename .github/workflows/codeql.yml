@@ -34,6 +34,9 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      # build-mode: manual with an explicit Gradle build. build-mode: none was
+      # tried and extracts zero source for this KMP layout ("no source code
+      # seen"), so we compile and let CodeQL trace the bytecode.
       - name: Initialize CodeQL
         uses: github/codeql-action/init@8aad20d150bbac5944a9f9d289da16a4b0d87c1e  # v4.36.2
         with:

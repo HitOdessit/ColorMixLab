@@ -36,6 +36,18 @@ updates:
       - dependency-name: "androidx.lifecycle:*"
       - dependency-name: "androidx.core:core-ktx"
 
+      # Kotlin Gradle Plugin 2.4.0+ enforces a minimum AGP of 8.5.2 at
+      # plugin-apply time (KGP <-> AGP version-compatibility check). AGP is
+      # frozen at 8.3.0 above, so a Kotlin 2.4.0 bump fails EVERY Gradle-based
+      # check — Android Build & Test, CodeQL's manual build, and Code Quality —
+      # at configuration time (this is exactly what reverted #26 did). The
+      # kotlin group is otherwise safe to flow within 2.3.x, so pin the floor
+      # rather than freezing the whole group. Re-enable 2.4.0+ after the joint
+      # AGP/Gradle/Compose upgrade. (No kotlinx.* artifact is near 2.4.0, so
+      # this floor only affects the Kotlin toolchain itself.)
+      - dependency-name: "org.jetbrains.kotlin*"
+        versions: [">=2.4.0"]
+
       # kotlinx-datetime 0.7+ removes Clock.System; commonMain still imports
       # kotlinx.datetime.Clock directly (GameController.kt, LeaderboardEntry.kt,
       # LeaderboardManager.kt — see closed PR #12). Re-enable after the

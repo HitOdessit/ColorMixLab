@@ -26,14 +26,12 @@ struct GameScreen: View {
 
     var body: some View {
         ZStack {
-            // Background
             Color(red: 0.95, green: 0.95, blue: 0.97)
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
                 // Top section: Menu, Level, Score, Target
                 HStack(alignment: .center, spacing: 12) {
-                    // Menu button
                     Button(action: { showMenu = true }) {
                         Image(systemName: "line.3.horizontal")
                             .font(.system(size: 24))
@@ -41,12 +39,10 @@ struct GameScreen: View {
                             .frame(width: 40, height: 40)
                     }
 
-                    // Level
                     Text("Lvl \(viewModel.gameState.currentLevel)")
                         .font(.system(size: 17, weight: .bold))
                         .foregroundColor(.blue)
 
-                    // Score (animated)
                     Text("Score: \(viewModel.gameState.currentScore)")
                         .font(.system(size: 17, weight: .bold))
                         .foregroundColor(.blue)
@@ -54,8 +50,7 @@ struct GameScreen: View {
 
                     Spacer()
 
-                    // Target color (small, top-right)
-                    TargetColorView(targetColor: viewModel.getTargetUIColor())
+                    TargetColorView(targetColor: viewModel.targetColor)
                 }
                 .padding(.horizontal, 12)
                 .padding(.top, 8)
@@ -72,7 +67,7 @@ struct GameScreen: View {
                 Spacer()
 
                 MixingBowlView(
-                    mixedColor: viewModel.getMixedUIColor(),
+                    mixedColor: viewModel.mixedColor,
                     drops: viewModel.gameState.drops,
                     similarity: viewModel.gameState.similarity
                 )
@@ -80,7 +75,6 @@ struct GameScreen: View {
 
                 Spacer()
 
-                // Color Palette (compact grid)
                 LazyVGrid(
                     columns: [
                         GridItem(.flexible(), spacing: 8),
@@ -101,7 +95,6 @@ struct GameScreen: View {
                 .padding(.horizontal, 12)
                 .frame(height: 180) // Fixed height for color grid
 
-                // Action Buttons
                 ActionButtons(
                     hasDrops: !viewModel.gameState.drops.isEmpty,
                     hasChecked: viewModel.gameState.hasCheckedThisRound,
@@ -119,7 +112,6 @@ struct GameScreen: View {
                 .frame(height: 70)
             }
 
-            // Celebration overlay
             if showCelebration {
                 GameCompletionCelebration(onAnimationComplete: {
                     showCelebration = false
@@ -161,7 +153,7 @@ struct GameScreen: View {
                 similarity: viewModel.gameState.similarity,
                 basePoints: viewModel.gameState.lastBasePoints,
                 timeBonus: viewModel.gameState.lastTimeBonus,
-                message: viewModel.getResultMessage(similarity: viewModel.gameState.similarity),
+                message: viewModel.resultMessage(for: viewModel.gameState.similarity),
                 emoji: viewModel.getResultEmoji(similarity: viewModel.gameState.similarity),
                 onNext: {
                     viewModel.nextLevel()
@@ -198,9 +190,6 @@ struct GameScreen: View {
                     dismiss()
                 }
             )
-        }
-        .onAppear {
-            // Timer is automatically managed by GameController
         }
         .onDisappear {
             viewModel.exitGame()
@@ -244,19 +233,15 @@ struct ColorButton: View {
 
     @State private var isPressed = false
 
+    private let hapticProvider = HapticProvider()
+
     private var color: Color {
-        let platformColor = gameColor.color
-        return Color(
-            red: Double(platformColor.redFloat),
-            green: Double(platformColor.greenFloat),
-            blue: Double(platformColor.blueFloat)
-        )
+        gameColor.color.swiftUIColor
     }
 
     var body: some View {
         Button(action: {
-            let generator = UIImpactFeedbackGenerator(style: .light)
-            generator.impactOccurred()
+            hapticProvider.performHaptic(type: HapticType.lightTap)
 
             withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
                 isPressed = true

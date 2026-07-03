@@ -26,27 +26,28 @@ class GameViewModel: ObservableObject {
         gameController = GameController(initialDifficulty: difficulty)
         gameState = gameController.gameState.value as! GameState
 
-        // Observe shared game state using simple polling
-        // This is a workaround since Kotlin StateFlow observation from Swift is complex
+        // Kotlin StateFlow observation from Swift is awkward, so we poll the
+        // current value on a 100ms cadence and republish when it changes.
+        // Change detection uses the shared data class's generated equality.
         stateObserver = Timer.publish(every: 0.1, on: .main, in: .common)
             .autoconnect()
             .sink { [weak self] _ in
                 guard let self = self else { return }
                 guard let newState = self.gameController.gameState.value as? GameState else { return }
-                if self.gameState != newState {
+                if !newState.isEqual(self.gameState) {
                     self.gameState = newState
 
                     // Handle timer lifecycle based on state changes
                     if newState.isTimerActive && self.timerCancellable == nil {
-                        self.startTimerCoroutine()
+                        self.startTimer()
                     } else if !newState.isTimerActive && self.timerCancellable != nil {
-                        self.cancelTimerCoroutine()
+                        self.stopTimer()
                     }
                 }
             }
     }
 
-    // ========== DELEGATE ALL ACTIONS TO SHARED CONTROLLER ==========
+    // MARK: - Actions (delegated to shared controller)
 
     func addColorDrop(color: GameColor) {
         gameController.addColorDrop(color: color)
@@ -60,7 +61,7 @@ class GameViewModel: ObservableObject {
 
     func checkMatch() {
         gameController.checkMatch()
-        let isSuccess = gameState.similarity >= 0.80
+        let isSuccess = gameState.similarity >= GameConstants.shared.MATCH_SUCCESS_THRESHOLD
         hapticProvider.performHaptic(type: isSuccess ? HapticType.success : HapticType.error)
     }
 
@@ -73,7 +74,7 @@ class GameViewModel: ObservableObject {
     }
 
     func resetGame() {
-        cancelTimerCoroutine()
+        stopTimer()
         gameController.resetGame()
     }
 
@@ -91,11 +92,11 @@ class GameViewModel: ObservableObject {
     }
 
     func exitGame() {
-        cancelTimerCoroutine()
+        stopTimer()
         stateObserver?.cancel()
     }
 
-    func getResultMessage(similarity: Float) -> String {
+    func resultMessage(for similarity: Float) -> String {
         gameController.getResultMessage(similarity: similarity)
     }
 
@@ -103,10 +104,10 @@ class GameViewModel: ObservableObject {
         gameController.getResultEmoji(similarity: similarity)
     }
 
-    // ========== IOS-SPECIFIC TIMER MANAGEMENT ==========
+    // MARK: - Timer management
     // Timer runs on main thread and calls shared controller's tickTimer()
 
-    private func startTimerCoroutine() {
+    private func startTimer() {
         timerCancellable?.cancel()
 
         timerCancellable = Timer.publish(every: 1, on: .main, in: .common)
@@ -116,51 +117,18 @@ class GameViewModel: ObservableObject {
             }
     }
 
-    private func cancelTimerCoroutine() {
+    private func stopTimer() {
         timerCancellable?.cancel()
         timerCancellable = nil
     }
 
-    // ========== UI COLOR CONVERSIONS ==========
+    // MARK: - UI color conversions
 
-    func getTargetUIColor() -> Color {
-        platformColorToUIColor(gameState.targetColor)
+    var targetColor: Color {
+        gameState.targetColor.swiftUIColor
     }
 
-    func getMixedUIColor() -> Color {
-        platformColorToUIColor(gameState.mixedColor)
-    }
-
-    private func platformColorToUIColor(_ platformColor: PlatformColor) -> Color {
-        Color(
-            red: Double(platformColor.redFloat),
-            green: Double(platformColor.greenFloat),
-            blue: Double(platformColor.blueFloat),
-            opacity: Double(platformColor.alphaFloat)
-        )
-    }
-
-    func gameColorToUIColor(_ gameColor: GameColor) -> Color {
-        platformColorToUIColor(gameColor.color)
-    }
-}
-
-// Make GameState Equatable for change detection
-extension GameState {
-    static func != (lhs: GameState, rhs: GameState) -> Bool {
-        return lhs.currentLevel != rhs.currentLevel ||
-               lhs.currentScore != rhs.currentScore ||
-               lhs.similarity != rhs.similarity ||
-               lhs.isMatched != rhs.isMatched ||
-               lhs.showSuccessDialog != rhs.showSuccessDialog ||
-               lhs.hasCheckedThisRound != rhs.hasCheckedThisRound ||
-               lhs.isGameCompleted != rhs.isGameCompleted ||
-               lhs.completedAllLevels != rhs.completedAllLevels ||
-               lhs.timeRemainingSeconds?.intValue != rhs.timeRemainingSeconds?.intValue ||
-               lhs.isTimerActive != rhs.isTimerActive ||
-               lhs.isTimerPaused != rhs.isTimerPaused ||
-               lhs.needsMathChallenge != rhs.needsMathChallenge ||
-               lhs.mathChallengeCompleted != rhs.mathChallengeCompleted ||
-               lhs.drops.count != rhs.drops.count
+    var mixedColor: Color {
+        gameState.mixedColor.swiftUIColor
     }
 }

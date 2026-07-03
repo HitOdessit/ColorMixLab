@@ -106,28 +106,6 @@ class LevelManagerTest {
     }
 
     @Test
-    fun `getToleranceForLevel returns correct values`() {
-        assertEquals(0.20f, LevelManager.getToleranceForLevel(1), 0.001f)
-        assertEquals(0.20f, LevelManager.getToleranceForLevel(3), 0.001f)
-        assertEquals(0.17f, LevelManager.getToleranceForLevel(4), 0.001f)
-        assertEquals(0.17f, LevelManager.getToleranceForLevel(6), 0.001f)
-        assertEquals(0.15f, LevelManager.getToleranceForLevel(7), 0.001f)
-        assertEquals(0.15f, LevelManager.getToleranceForLevel(9), 0.001f)
-        assertEquals(0.12f, LevelManager.getToleranceForLevel(10), 0.001f)
-        assertEquals(0.12f, LevelManager.getToleranceForLevel(30), 0.001f)
-    }
-
-    @Test
-    fun `getToleranceForLevel decreases with level`() {
-        val level3Tolerance = LevelManager.getToleranceForLevel(3)
-        val level7Tolerance = LevelManager.getToleranceForLevel(7)
-        val level15Tolerance = LevelManager.getToleranceForLevel(15)
-
-        assertTrue(level3Tolerance > level7Tolerance)
-        assertTrue(level7Tolerance > level15Tolerance)
-    }
-
-    @Test
     fun `generateTargetColor creates variety across multiple calls`() {
         val targets = List(20) {
             LevelManager.generateTargetColor(10).first

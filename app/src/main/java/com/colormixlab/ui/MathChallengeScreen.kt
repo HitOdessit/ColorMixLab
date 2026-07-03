@@ -14,9 +14,10 @@ import androidx.compose.ui.unit.dp
 import com.colormixlab.game.Difficulty
 import com.colormixlab.game.math.MathChallengeState
 import com.colormixlab.game.math.MathQuestionGenerator
+import com.colormixlab.platform.HapticProvider
+import com.colormixlab.platform.HapticType
 import com.colormixlab.ui.components.ConfettiEffect
 import com.colormixlab.ui.components.MathChallengeLayout
-import com.colormixlab.utils.HapticManager
 import com.colormixlab.utils.MathChallengeTimer
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -52,7 +53,7 @@ fun MathChallengeScreen(
 
     // Utilities
     val context = LocalContext.current
-    val hapticManager = remember { HapticManager(context) }
+    val hapticManager = remember { HapticProvider(context) }
     val scope = rememberCoroutineScope()
 
     // Timer countdown effect
@@ -148,7 +149,7 @@ fun MathChallengeScreen(
 @Composable
 private fun ChallengeTimerEffect(
     challengeState: MathChallengeState,
-    hapticManager: HapticManager,
+    hapticManager: HapticProvider,
     onTimerExpired: () -> Unit,
     onTimerTick: (MathChallengeState) -> Unit
 ) {
@@ -161,13 +162,13 @@ private fun ChallengeTimerEffect(
 
                 // Haptic at warning threshold
                 if (timeRemaining <= MathChallengeTimer.getWarningThreshold()) {
-                    hapticManager.performHaptic(HapticManager.HapticType.LIGHT_TAP)
+                    hapticManager.performHaptic(HapticType.LIGHT_TAP)
                 }
 
                 onTimerTick(challengeState.copy(timeRemaining = timeRemaining - 1))
             } else {
                 // Timer expired
-                hapticManager.performHaptic(HapticManager.HapticType.ERROR)
+                hapticManager.performHaptic(HapticType.ERROR)
                 onTimerExpired()
             }
         }
@@ -205,7 +206,7 @@ private fun handleChallengeAnswerClick(
     answer: Int,
     correctAnswer: Int,
     challengeState: MathChallengeState,
-    hapticManager: HapticManager,
+    hapticManager: HapticProvider,
     onStateUpdate: (MathChallengeState) -> Unit
 ) {
     if (challengeState.showingAnswer) return
@@ -214,9 +215,9 @@ private fun handleChallengeAnswerClick(
 
     // Haptic feedback
     if (isCorrect) {
-        hapticManager.performHaptic(HapticManager.HapticType.SUCCESS)
+        hapticManager.performHaptic(HapticType.SUCCESS)
     } else {
-        hapticManager.performHaptic(HapticManager.HapticType.ERROR)
+        hapticManager.performHaptic(HapticType.ERROR)
     }
 
     // Update state

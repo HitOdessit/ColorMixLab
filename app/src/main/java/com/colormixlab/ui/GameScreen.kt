@@ -15,6 +15,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.colormixlab.data.LeaderboardManager
 import com.colormixlab.game.GameViewModel
 import com.colormixlab.model.LeaderboardEntry
+import com.colormixlab.platform.HapticProvider
 import com.colormixlab.ui.components.LandscapeGameLayout
 import com.colormixlab.ui.components.MathChallengeDialog
 import com.colormixlab.ui.components.PortraitGameLayout
@@ -23,7 +24,6 @@ import com.colormixlab.ui.dialogs.MenuDialog
 import com.colormixlab.ui.dialogs.NicknameDialog
 import com.colormixlab.ui.dialogs.ResultDialog
 import com.colormixlab.ui.LeaderboardDialog
-import com.colormixlab.utils.HapticManager
 
 /**
  * Main game screen component.
@@ -47,7 +47,7 @@ fun GameScreen(
     // Game state and utilities
     val state = viewModel.gameState.value
     val context = LocalContext.current
-    val hapticManager = remember { HapticManager(context) }
+    val hapticManager = remember { HapticProvider(context) }
     val leaderboardManager = remember {
         LeaderboardManager(com.colormixlab.platform.PlatformStorage(context))
     }

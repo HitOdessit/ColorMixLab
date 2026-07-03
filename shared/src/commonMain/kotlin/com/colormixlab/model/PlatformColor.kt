@@ -28,24 +28,9 @@ data class PlatformColor(val argb: UInt) {
         val Black = PlatformColor(0, 0, 0)
         val Transparent = PlatformColor(0, 0, 0, 0)
 
-        // Game colors
+        // Primary references used for mixing math and tests. The full game
+        // palette lives in GameColor — don't duplicate it here.
         val Red = PlatformColor(0xFFFF0000u)
         val Blue = PlatformColor(0xFF0000FFu)
-        val Green = PlatformColor(0xFF00FF00u)
-        val Yellow = PlatformColor(0xFFFFFF00u)
-        val Orange = PlatformColor(0xFFFF8C00u)
-        val Purple = PlatformColor(0xFF800080u)
-        val Pink = PlatformColor(0xFFFFC0CBu)
-        val Cyan = PlatformColor(0xFF00FFFFu)
-        val Magenta = PlatformColor(0xFFFF00FFu)
-        val Lime = PlatformColor(0xFF00FF00u)
-        val Brown = PlatformColor(0xFF8B4513u)
-        val Gray = PlatformColor(0xFF808080u)
-        val Teal = PlatformColor(0xFF008080u)
-        val Indigo = PlatformColor(0xFF4B0082u)
-        val Violet = PlatformColor(0xFFEE82EEu)
-        val Turquoise = PlatformColor(0xFF40E0D0u)
-        val Gold = PlatformColor(0xFFFFD700u)
-        val Silver = PlatformColor(0xFFC0C0C0u)
     }
 }

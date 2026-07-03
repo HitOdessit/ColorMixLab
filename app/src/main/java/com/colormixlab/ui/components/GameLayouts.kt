@@ -21,7 +21,8 @@ import androidx.compose.ui.unit.sp
 import com.colormixlab.game.Difficulty
 import com.colormixlab.game.GameState
 import com.colormixlab.game.GameViewModel
-import com.colormixlab.utils.HapticManager
+import com.colormixlab.platform.HapticProvider
+import com.colormixlab.platform.HapticType
 
 /**
  * Timer display component for game screen.
@@ -41,7 +42,7 @@ fun TimerDisplay(
     difficulty: Difficulty
 ) {
     val context = LocalContext.current
-    val hapticManager = remember { HapticManager(context) }
+    val hapticManager = remember { HapticProvider(context) }
 
     // Easy mode shows infinity symbol (no timer)
     if (difficulty == Difficulty.EASY) {
@@ -66,7 +67,7 @@ fun TimerDisplay(
     // Haptic feedback in warning state
     LaunchedEffect(time) {
         if (isWarning) {
-            hapticManager.performHaptic(HapticManager.HapticType.LIGHT_TAP)
+            hapticManager.performHaptic(HapticType.LIGHT_TAP)
         }
     }
 
@@ -135,7 +136,7 @@ fun TimerDisplay(
 fun PortraitGameLayout(
     state: GameState,
     viewModel: GameViewModel,
-    hapticManager: HapticManager,
+    hapticManager: HapticProvider,
     onShowMenu: () -> Unit
 ) {
     Column(
@@ -215,7 +216,7 @@ fun PortraitGameLayout(
                     color = color,
                     dropCount = state.getDropCount(color),
                     onClick = {
-                        hapticManager.performHaptic(HapticManager.HapticType.LIGHT_TAP)
+                        hapticManager.performHaptic(HapticType.LIGHT_TAP)
                         viewModel.addColorDrop(color)
                     },
                     modifier = Modifier.padding(horizontal = 6.dp)
@@ -254,7 +255,7 @@ fun PortraitGameLayout(
 fun LandscapeGameLayout(
     state: GameState,
     viewModel: GameViewModel,
-    hapticManager: HapticManager,
+    hapticManager: HapticProvider,
     onShowMenu: () -> Unit
 ) {
     Row(
@@ -355,7 +356,7 @@ fun LandscapeGameLayout(
                         color = color,
                         dropCount = state.getDropCount(color),
                         onClick = {
-                            hapticManager.performHaptic(HapticManager.HapticType.LIGHT_TAP)
+                            hapticManager.performHaptic(HapticType.LIGHT_TAP)
                             viewModel.addColorDrop(color)
                         },
                         modifier = Modifier.padding(horizontal = 8.dp)
@@ -379,7 +380,7 @@ fun LandscapeGameLayout(
 private fun GameActionButtons(
     state: GameState,
     viewModel: GameViewModel,
-    hapticManager: HapticManager,
+    hapticManager: HapticProvider,
     isLandscape: Boolean = false
 ) {
     val buttonHeight = if (isLandscape) 52.dp else 48.dp
@@ -397,10 +398,10 @@ private fun GameActionButtons(
         // Check Match button
         Button(
             onClick = {
-                hapticManager.performHaptic(HapticManager.HapticType.LIGHT_TAP)
+                hapticManager.performHaptic(HapticType.LIGHT_TAP)
                 viewModel.checkMatch()
                 if (viewModel.gameState.value.isMatched) {
-                    hapticManager.performHaptic(HapticManager.HapticType.SUCCESS)
+                    hapticManager.performHaptic(HapticType.SUCCESS)
                 }
             },
             enabled = state.getTotalDrops() > 0 && !state.hasCheckedThisRound,
@@ -421,7 +422,7 @@ private fun GameActionButtons(
         // Clear Bowl button
         Button(
             onClick = {
-                hapticManager.performHaptic(HapticManager.HapticType.LIGHT_TAP)
+                hapticManager.performHaptic(HapticType.LIGHT_TAP)
                 viewModel.clearBowl()
             },
             colors = ButtonDefaults.buttonColors(

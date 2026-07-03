@@ -16,7 +16,7 @@ src/main/java/com/colormixlab/
 │   ├── components/           # Reusable composables
 │   ├── dialogs/              # Menu, Result, Nickname dialogs
 │   └── theme/                # Material 3 theme
-└── utils/                    # HapticManager, color extensions
+└── utils/                    # Compose color extensions (haptics/sound use shared providers)
 src/test/                     # JUnit unit tests for shared logic
 ```
 

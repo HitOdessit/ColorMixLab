@@ -16,6 +16,8 @@ struct IntroScreen: View {
     @State private var versionClickCount = 0
     @State private var versionClickTimer: Timer?
 
+    private let hapticProvider = HapticProvider()
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -116,8 +118,9 @@ struct IntroScreen: View {
 
                         // Start Game Button
                         Button(action: {
-                            let generator = UIImpactFeedbackGenerator(style: .medium)
-                            generator.impactOccurred()
+                            // Shared HapticType has no medium-impact case; lightTap is
+                            // the closest exported equivalent.
+                            hapticProvider.performHaptic(type: HapticType.lightTap)
                             navigateToGame = true
                         }) {
                             Text("Start Game")

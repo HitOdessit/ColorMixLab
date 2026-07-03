@@ -252,6 +252,7 @@ class MathChallengeViewModel: ObservableObject {
 
     private let difficulty: Difficulty
     private var timer: Timer?
+    private let hapticProvider = HapticProvider()
 
     init(difficulty: Difficulty) {
         self.difficulty = difficulty
@@ -283,9 +284,7 @@ class MathChallengeViewModel: ObservableObject {
             consecutiveCorrect += 1
             questionsAnswered += 1
 
-            // Haptic feedback
-            let generator = UINotificationFeedbackGenerator()
-            generator.notificationOccurred(.success)
+            hapticProvider.performHaptic(type: HapticType.success)
 
             if consecutiveCorrect >= 3 {
                 // Challenge completed!
@@ -301,9 +300,7 @@ class MathChallengeViewModel: ObservableObject {
             consecutiveCorrect = 0
             questionsAnswered += 1
 
-            // Haptic feedback
-            let generator = UINotificationFeedbackGenerator()
-            generator.notificationOccurred(.error)
+            hapticProvider.performHaptic(type: HapticType.error)
 
             onWrong()
 

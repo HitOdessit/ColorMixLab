@@ -81,17 +81,4 @@ object LevelManager {
         val map = selectedColors.associateWith { Random.nextInt(1, 7) }
         return Pair(ColorMixer.mixColors(map), map)
     }
-
-    /**
-     * Get tolerance for color matching based on level.
-     * Earlier levels are more forgiving.
-     */
-    fun getToleranceForLevel(level: Int): Float {
-        return when {
-            level <= 3 -> 0.20f  // Very forgiving
-            level <= 6 -> 0.17f  // Forgiving
-            level <= 9 -> 0.15f  // Moderate
-            else -> 0.12f        // Stricter
-        }
-    }
 }

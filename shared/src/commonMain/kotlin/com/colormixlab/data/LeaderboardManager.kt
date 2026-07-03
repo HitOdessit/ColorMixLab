@@ -55,7 +55,8 @@ class LeaderboardManager(private val storage: KeyValueStorage) {
 
         return try {
             json.decodeFromString<List<LeaderboardEntry>>(jsonString)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
+            // Corrupt or legacy payload — recover by starting from an empty list.
             emptyList()
         }
     }

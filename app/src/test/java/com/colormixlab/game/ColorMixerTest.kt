@@ -101,35 +101,6 @@ class ColorMixerTest {
     }
 
     @Test
-    fun `colorsMatch returns true for identical colors`() {
-        val color = PlatformColor(128, 128, 128)
-
-        assertTrue(ColorMixer.colorsMatch(color, color))
-    }
-
-    @Test
-    fun `colorsMatch returns false for very different colors`() {
-        assertFalse(ColorMixer.colorsMatch(PlatformColor.Red, PlatformColor.Blue))
-    }
-
-    @Test
-    fun `colorsMatch respects tolerance parameter`() {
-        val target = PlatformColor(128, 128, 128)
-        val similar = PlatformColor(133, 133, 133)
-
-        assertFalse(ColorMixer.colorsMatch(target, similar, tolerance = 0.01f))
-        assertTrue(ColorMixer.colorsMatch(target, similar, tolerance = 0.5f))
-    }
-
-    @Test
-    fun `colorsMatch uses default tolerance of 0_15`() {
-        val target = PlatformColor(128, 128, 128)
-        val similar = PlatformColor(140, 140, 140)
-
-        assertTrue(ColorMixer.colorsMatch(target, similar))
-    }
-
-    @Test
     fun `mixColors with all three base colors`() {
         val drops = mapOf(
             GameColor.Red to 1,

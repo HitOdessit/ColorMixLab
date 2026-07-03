@@ -52,7 +52,7 @@ struct MixingBowlView: View {
                     var currentAngle: CGFloat = -90 // Start from top
 
                     for slice in animatedSlices {
-                        let sliceColor = colorFromGameColor(slice.color)
+                        let sliceColor = slice.color.color.swiftUIColor
                         let sweepAngle = slice.angle
 
                         // Draw outer arc
@@ -158,15 +158,6 @@ struct MixingBowlView: View {
                 animatedSlices = newSlices
             }
         }
-    }
-
-    private func colorFromGameColor(_ gameColor: GameColor) -> Color {
-        let platformColor = gameColor.color
-        return Color(
-            red: Double(platformColor.redFloat),
-            green: Double(platformColor.greenFloat),
-            blue: Double(platformColor.blueFloat)
-        )
     }
 }
 
